@@ -377,7 +377,7 @@ Browser öffnet: http://localhost:3000
 
 ```yaml
 id: TASK-001
-status: pending
+status: done
 priority: high
 phase: 1
 agent: any
@@ -452,7 +452,7 @@ export interface EditorState {
 
 ```yaml
 id: TASK-002
-status: pending
+status: done
 priority: high
 phase: 1
 agent: any
@@ -954,11 +954,12 @@ yoast_fields:
 # 📝 Notizen für Agenten
 
 - Bei Unklarheiten: Frage den User
-- Nach jedem abgeschlossenen Task: Status auf `done` setzen
+- **WICHTIG:** Nach jedem abgeschlossenen Task: Status im YAML-Block von `pending` auf `done` ändern und in PROJEKTPLAN.md speichern
 - Bei Blockern: Status auf `blocked` setzen und Grund notieren
 - Alle Komponenten müssen TypeScript-typisiert sein
 - Tailwind CSS für Styling verwenden
 - Keine externen UI-Libraries (außer den installierten)
+- Immer die Änderungen mit `git status` und `git diff` prüfen bevor ein Commit erstellt wird
 
 ---
 

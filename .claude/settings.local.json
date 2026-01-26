@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm install @tiptap/react @tiptap/starter-kit @tiptap/pm zustand @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities lucide-react date-fns slugify axios)"
     ]
   }
 }
