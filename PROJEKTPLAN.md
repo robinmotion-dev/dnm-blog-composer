@@ -695,7 +695,7 @@ acceptance:
 
 ```yaml
 id: TASK-012
-status: pending
+status: done
 priority: high
 phase: 3
 agent: any
@@ -715,7 +715,7 @@ acceptance:
 
 ```yaml
 id: TASK-013
-status: pending
+status: done
 priority: medium
 phase: 3
 agent: any
@@ -736,7 +736,7 @@ acceptance:
 
 ```yaml
 id: TASK-014
-status: pending
+status: done
 priority: high
 phase: 3
 agent: any
@@ -749,6 +749,64 @@ acceptance:
   - Desktop/Mobile Toggle
   - Scrollbar unabhängig vom Editor
 ```
+
+---
+
+### TASK-014A: Featured Image (Teaserbild) - Types & Store
+
+```yaml
+id: TASK-014A
+status: done
+priority: high
+phase: 3
+agent: any
+depends_on: TASK-002
+files:
+  - src/types/index.ts
+  - src/stores/editor-store.ts
+acceptance:
+  - featuredImage: ImageData zu BlogPost Type hinzufügen
+  - setFeaturedImage Action im Store
+  - useFeaturedImageFromHeader Option (boolean) im Store
+```
+
+**Beschreibung:** Erweitere die Types und den Store um Featured Image Support:
+
+- Neues Feld `featuredImage: ImageData` im BlogPost Interface
+- Neues Feld `useFeaturedImageFromHeader: boolean` (default: false)
+- Action `setFeaturedImage(image: ImageData)`
+- Action `setUseFeaturedImageFromHeader(use: boolean)`
+- Logik: Wenn `useFeaturedImageFromHeader` true ist, wird headerImageDesktop als Teaserbild verwendet (gecroppt)
+
+---
+
+### TASK-014B: FeaturedImageUploader Komponente
+
+```yaml
+id: TASK-014B
+status: done
+priority: high
+phase: 3
+agent: any
+depends_on: TASK-014A, TASK-006
+files:
+  - src/components/Editor/FeaturedImageUploader.tsx
+acceptance:
+  - ImageUploader für Beitragsbild/Featured Image
+  - Checkbox "Header-Bild als Teaserbild verwenden"
+  - Wenn Checkbox aktiv: Zeige Preview mit Crop-Hinweis
+  - Position nach BlockList in page.tsx
+```
+
+**Beschreibung:** Erstelle Komponente für das Featured Image:
+- Verwendet die bestehende ImageUploader Komponente
+- Zusätzliche Checkbox: "Header-Bild (Desktop) als Teaserbild verwenden"
+- Wenn Checkbox aktiv:
+  - Zeige Info-Text: "Das Desktop Header-Bild wird automatisch als Teaserbild verwendet (wird von links/rechts gleichmäßig auf Quadrat gecroppt)"
+  - Deaktiviere den Upload-Bereich
+  - Zeige Preview des Header-Bildes
+- Wenn Checkbox inaktiv:
+  - Normaler ImageUploader für separates Teaserbild
 
 ---
 

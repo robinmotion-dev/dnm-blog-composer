@@ -37,6 +37,8 @@ export interface BlogPost {
   title: string;
   headerImageDesktop: ImageData;
   headerImageMobile: ImageData;
+  featuredImage: ImageData;
+  useFeaturedImageFromHeader: boolean;
   excerpt: string;
   blocks: ContentBlock[];
   meta: MetaData;

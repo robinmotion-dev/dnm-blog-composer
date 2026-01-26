@@ -17,6 +17,8 @@ interface EditorStore {
   setExcerpt: (excerpt: string) => void;
   setHeaderImageDesktop: (image: ImageData) => void;
   setHeaderImageMobile: (image: ImageData) => void;
+  setFeaturedImage: (image: ImageData) => void;
+  setUseFeaturedImageFromHeader: (use: boolean) => void;
   addBlock: () => void;
   updateBlock: (id: string, data: Partial<ContentBlock>) => void;
   removeBlock: (id: string) => void;
@@ -48,6 +50,14 @@ const createEmptyPost = (): BlogPost => ({
     caption: '',
     description: '',
   },
+  featuredImage: {
+    file: null,
+    preview: '',
+    alt: '',
+    caption: '',
+    description: '',
+  },
+  useFeaturedImageFromHeader: false,
   excerpt: '',
   blocks: [],
   meta: {
@@ -97,6 +107,18 @@ export const useEditorStore = create<EditorStore>()(
       setHeaderImageMobile: (image: ImageData) =>
         set((state) => ({
           post: { ...state.post, headerImageMobile: image },
+          isDirty: true,
+        })),
+
+      setFeaturedImage: (image: ImageData) =>
+        set((state) => ({
+          post: { ...state.post, featuredImage: image },
+          isDirty: true,
+        })),
+
+      setUseFeaturedImageFromHeader: (use: boolean) =>
+        set((state) => ({
+          post: { ...state.post, useFeaturedImageFromHeader: use },
           isDirty: true,
         })),
 

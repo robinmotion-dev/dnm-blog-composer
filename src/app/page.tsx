@@ -5,7 +5,11 @@ import TitleInput from '@/components/Editor/TitleInput';
 import ImageUploader from '@/components/Editor/ImageUploader';
 import ExcerptInput from '@/components/Editor/ExcerptInput';
 import BlockList from '@/components/Editor/BlockList';
+import FeaturedImageUploader from '@/components/Editor/FeaturedImageUploader';
 import MetaFields from '@/components/Editor/MetaFields';
+import SEOPanel from '@/components/SEO/SEOPanel';
+import SEOIndicator from '@/components/SEO/SEOIndicator';
+import BlogPreview from '@/components/Preview/BlogPreview';
 
 export default function Home() {
   const headerImageDesktop = useEditorStore(
@@ -55,17 +59,18 @@ export default function Home() {
 
           <BlockList />
 
+          <FeaturedImageUploader />
+
           <MetaFields />
+
+          <SEOPanel />
+
+          <SEOIndicator />
         </section>
 
         {/* Preview */}
         <section className="overflow-auto p-6 bg-neutral-50">
-          <div className="text-sm text-neutral-500 mb-3">Preview (kommt in TASK-014)</div>
-          <div className="rounded-lg border bg-white p-6">
-            <p className="text-neutral-600">
-              Platzhalter: Hier kommt die Live-Preview rein.
-            </p>
-          </div>
+          <BlogPreview />
         </section>
       </div>
     </main>
