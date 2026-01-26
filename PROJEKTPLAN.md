@@ -499,7 +499,7 @@ Actions die benötigt werden:
 
 ```yaml
 id: TASK-003
-status: pending
+status: done
 priority: high
 phase: 1
 agent: any
@@ -533,7 +533,7 @@ acceptance:
 
 ```yaml
 id: TASK-004
-status: pending
+status: done
 priority: medium
 phase: 1
 agent: any
@@ -558,7 +558,7 @@ acceptance:
 
 ```yaml
 id: TASK-005
-status: pending
+status: done
 priority: high
 phase: 2
 agent: any
@@ -577,7 +577,7 @@ acceptance:
 
 ```yaml
 id: TASK-006
-status: pending
+status: done
 priority: high
 phase: 2
 agent: any
@@ -598,7 +598,7 @@ acceptance:
 
 ```yaml
 id: TASK-007
-status: pending
+status: done
 priority: high
 phase: 2
 agent: any
@@ -617,7 +617,7 @@ acceptance:
 
 ```yaml
 id: TASK-008
-status: pending
+status: done
 priority: high
 phase: 2
 agent: any
@@ -637,7 +637,7 @@ acceptance:
 
 ```yaml
 id: TASK-009
-status: pending
+status: done
 priority: high
 phase: 2
 agent: any
@@ -656,7 +656,7 @@ acceptance:
 
 ```yaml
 id: TASK-010
-status: pending
+status: done
 priority: medium
 phase: 2
 agent: any
@@ -675,7 +675,7 @@ acceptance:
 
 ```yaml
 id: TASK-011
-status: pending
+status: done
 priority: medium
 phase: 2
 agent: any
