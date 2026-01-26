@@ -17,6 +17,7 @@ export default function RichTextEditor({
   placeholder = 'Beginne zu schreiben...',
 }: RichTextEditorProps) {
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [StarterKit],
     content: value,
     onUpdate: ({ editor }) => {
