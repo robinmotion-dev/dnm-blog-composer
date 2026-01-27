@@ -7,8 +7,10 @@ import ExcerptInput from '@/components/Editor/ExcerptInput';
 import BlockList from '@/components/Editor/BlockList';
 import FeaturedImageUploader from '@/components/Editor/FeaturedImageUploader';
 import MetaFields from '@/components/Editor/MetaFields';
+import RelatedPosts from '@/components/Editor/RelatedPosts';
 import SEOPanel from '@/components/SEO/SEOPanel';
 import SEOIndicator from '@/components/SEO/SEOIndicator';
+import PublishButton from '@/components/Editor/PublishButton';
 import BlogPreview from '@/components/Preview/BlogPreview';
 
 export default function Home() {
@@ -63,9 +65,13 @@ export default function Home() {
 
           <MetaFields />
 
+          <RelatedPosts />
+
           <SEOPanel />
 
           <SEOIndicator />
+
+          <PublishButton />
         </section>
 
         {/* Preview */}

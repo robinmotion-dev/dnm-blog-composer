@@ -851,7 +851,7 @@ acceptance:
 
 ```yaml
 id: TASK-015
-status: pending
+status: done
 priority: high
 phase: 4
 agent: any
@@ -869,7 +869,7 @@ acceptance:
 
 ```yaml
 id: TASK-016
-status: pending
+status: done
 priority: high
 phase: 4
 agent: any
@@ -892,7 +892,7 @@ acceptance:
 
 ```yaml
 id: TASK-017
-status: pending
+status: done
 priority: medium
 phase: 4
 agent: any
@@ -912,7 +912,7 @@ acceptance:
 
 ```yaml
 id: TASK-018
-status: pending
+status: done
 priority: high
 phase: 4
 agent: any

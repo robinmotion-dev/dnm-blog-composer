@@ -35,6 +35,7 @@ export interface MetaData {
 export interface RelatedPost {
   id: number;
   title: string;
+  slug: string;
 }
 
 export interface BlogPost {
