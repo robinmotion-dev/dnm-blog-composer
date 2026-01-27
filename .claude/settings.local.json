@@ -7,7 +7,10 @@
       "Bash(lsof:*)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: complete Phase 3 - SEO, Preview & Featured Image\n\nPhase 3: SEO & Preview\n- Add SEO Panel with title, description, keyword & auto-slug generation\n- Add SEO Indicator with score calculation and checklist\n- Add Blog Preview with Desktop/Mobile toggle\n- Add Featured Image uploader with header image reuse option\n\nComponents:\n- SEOPanel: SEO fields with character counters\n- SEOIndicator: Real-time SEO score \\(0-100\\) with 7 checks\n- BlogPreview: Live preview of blog post\n- PreviewFrame: Device toggle \\(Desktop/Mobile\\)\n- FeaturedImageUploader: Teaser image with crop visualization\n\nImprovements:\n- Add seo-analyzer.ts for SEO scoring logic\n- Extend BlogPost type with featuredImage & useFeaturedImageFromHeader\n- Add store actions: setFeaturedImage, setUseFeaturedImageFromHeader\n- Update PROJEKTPLAN.md: Tasks 12-14B marked as done\n\nAll TypeScript validations passing.\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git push origin main)"
+      "Bash(git push origin main)",
+      "Bash(cd /Volumes/SSD_Hub/My\\\\ GitHub\\\\ Stuff/dnm-blog-composer && ls:*)",
+      "Bash(npm install:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: complete Tasks 17-18 - RelatedPosts & Publish Flow\n\n- TASK-017: RelatedPosts component with WP API integration, search & multi-select \\(max 3\\)\n- TASK-018: PublishButton with toast notifications, loading states, and error handling\n- Added react-hot-toast for notification system\n- Created ToastProvider and integrated into layout\n- Extended RelatedPost type with slug property\n- Updated PROJEKTPLAN.md status to done\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
