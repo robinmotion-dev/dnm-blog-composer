@@ -10,8 +10,12 @@ export interface ImageData {
 
 export interface ContentBlock {
   id: string;
-  headline: string;
-  content: string; // HTML from Tiptap
+  type: 'text' | 'image';
+  // Text block fields
+  headline?: string;
+  content?: string; // HTML from Tiptap
+  // Image block fields
+  image?: ImageData;
 }
 
 export interface SEOData {

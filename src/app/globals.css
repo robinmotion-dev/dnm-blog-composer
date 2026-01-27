@@ -24,3 +24,18 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Ensure proper spacing for Tiptap content */
+.prose p {
+  margin-bottom: 1em;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+/* Preserve empty paragraphs for line breaks */
+.prose p:empty::before {
+  content: '\00a0'; /* Non-breaking space */
+  display: inline-block;
+}

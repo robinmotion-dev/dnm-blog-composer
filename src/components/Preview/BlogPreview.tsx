@@ -69,16 +69,38 @@ export default function BlogPreview() {
           <div className="space-y-8">
             {post.blocks.map((block) => (
               <div key={block.id} className="content-block">
-                {block.headline && (
-                  <h2 className="text-2xl font-bold text-neutral-900 mb-4">
-                    {block.headline}
-                  </h2>
-                )}
-                {block.content && (
-                  <div
-                    className="prose prose-neutral max-w-none"
-                    dangerouslySetInnerHTML={{ __html: block.content }}
-                  />
+                {block.type === 'text' ? (
+                  <>
+                    {block.headline && (
+                      <h2 className="text-2xl font-bold text-neutral-900 mb-4">
+                        {block.headline}
+                      </h2>
+                    )}
+                    {block.content && (
+                      <div
+                        className="prose prose-neutral max-w-none"
+                        dangerouslySetInnerHTML={{ __html: block.content }}
+                      />
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Image Block */}
+                    {block.image?.preview && (
+                      <figure className="my-6">
+                        <img
+                          src={block.image.preview}
+                          alt={block.image.alt || ''}
+                          className="w-full h-auto rounded-lg"
+                        />
+                        {block.image.caption && (
+                          <figcaption className="text-sm text-neutral-600 mt-2 text-center italic">
+                            {block.image.caption}
+                          </figcaption>
+                        )}
+                      </figure>
+                    )}
+                  </>
                 )}
               </div>
             ))}

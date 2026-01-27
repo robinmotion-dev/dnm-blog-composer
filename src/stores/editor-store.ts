@@ -19,7 +19,7 @@ interface EditorStore {
   setHeaderImageMobile: (image: ImageData) => void;
   setFeaturedImage: (image: ImageData) => void;
   setUseFeaturedImageFromHeader: (use: boolean) => void;
-  addBlock: () => void;
+  addBlock: (type?: 'text' | 'image') => void;
   updateBlock: (id: string, data: Partial<ContentBlock>) => void;
   removeBlock: (id: string) => void;
   reorderBlocks: (fromIndex: number, toIndex: number) => void;
@@ -122,12 +122,22 @@ export const useEditorStore = create<EditorStore>()(
           isDirty: true,
         })),
 
-      addBlock: () =>
+      addBlock: (type: 'text' | 'image' = 'text') =>
         set((state) => {
           const newBlock: ContentBlock = {
             id: `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            headline: '',
-            content: '',
+            type,
+            ...(type === 'text'
+              ? { headline: '', content: '' }
+              : {
+                  image: {
+                    file: null,
+                    preview: '',
+                    alt: '',
+                    caption: '',
+                    description: '',
+                  },
+                }),
           };
           return {
             post: {

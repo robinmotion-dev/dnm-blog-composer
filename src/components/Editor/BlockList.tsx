@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { Plus, Image, Type } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -80,15 +80,26 @@ export default function BlockList() {
         <h3 className="text-sm font-semibold text-neutral-700">
           Content Blocks
         </h3>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={addBlock}
-        >
-          <Plus className="h-4 w-4 mr-1" />
-          Block hinzufügen
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => addBlock('text')}
+          >
+            <Type className="h-4 w-4 mr-1" />
+            Textblock
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => addBlock('image')}
+          >
+            <Image className="h-4 w-4 mr-1" />
+            Bildblock
+          </Button>
+        </div>
       </div>
 
       <DndContext

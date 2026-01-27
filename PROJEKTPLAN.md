@@ -810,6 +810,41 @@ acceptance:
 
 ---
 
+### TASK-014C: Image Blocks in Content
+
+```yaml
+id: TASK-014C
+status: done
+priority: high
+phase: 3
+agent: any
+depends_on: TASK-008, TASK-009
+files:
+  - src/types/index.ts
+  - src/stores/editor-store.ts
+  - src/components/Editor/BlockList.tsx
+  - src/components/Editor/ContentBlock.tsx
+  - src/components/Preview/BlogPreview.tsx
+acceptance:
+  - ContentBlock unterstützt type: 'text' | 'image'
+  - Zwei separate Buttons: "Textblock" und "Bildblock"
+  - Bildblocks zeigen ImageUploader
+  - Preview rendert Bildblocks mit Caption
+  - Drag & Drop funktioniert für beide Block-Typen
+```
+
+**Beschreibung:** Ermöglicht das Einfügen von Bildern zwischen Textblocks:
+
+- ContentBlock Interface erweitert um `type: 'text' | 'image'`
+- Text-Blocks: `headline` + `content` (wie bisher)
+- Bild-Blocks: `image: ImageData` mit Alt, Caption, Description
+- BlockList zeigt zwei Buttons: "Textblock hinzufügen" und "Bildblock hinzufügen"
+- ContentBlock Komponente rendert je nach type unterschiedlich
+- BlogPreview zeigt Bilder als `<figure>` mit Caption
+- Drag & Drop funktioniert unverändert für beide Typen
+
+---
+
 ## Phase 4: WordPress Integration
 
 ### TASK-015: WordPress API Client
