@@ -8,10 +8,14 @@ import toast from 'react-hot-toast';
 
 export default function PublishButton() {
   const post = useEditorStore((state) => state.post);
+  const setWpPostId = useEditorStore((state) => state.setWpPostId);
+  const setImageMediaId = useEditorStore((state) => state.setImageMediaId);
   const [isPublishing, setIsPublishing] = useState(false);
   const [lastPublishedLink, setLastPublishedLink] = useState<string | null>(
     null
   );
+
+  const isUpdate = !!post.wpPostId;
 
   const handlePublish = async () => {
     // Validation
@@ -47,10 +51,32 @@ export default function PublishButton() {
       const wpPost = data.post;
       setLastPublishedLink(wpPost.link);
 
+      // Save WordPress Post ID for future updates
+      if (wpPost.id && !post.wpPostId) {
+        setWpPostId(wpPost.id);
+      }
+
+      // Save Media IDs for future updates (to avoid re-uploading)
+      if (data.mediaIds) {
+        if (data.mediaIds.headerImageDesktop) {
+          setImageMediaId('headerImageDesktop', data.mediaIds.headerImageDesktop);
+        }
+        if (data.mediaIds.headerImageMobile) {
+          setImageMediaId('headerImageMobile', data.mediaIds.headerImageMobile);
+        }
+        if (data.mediaIds.featuredImage) {
+          setImageMediaId('featuredImage', data.mediaIds.featuredImage);
+        }
+      }
+
+      const successMessage = isUpdate
+        ? 'Draft erfolgreich aktualisiert!'
+        : 'Draft erfolgreich erstellt!';
+
       toast.success(
         (t) => (
           <div className="flex items-center gap-2">
-            <span>Draft erfolgreich erstellt!</span>
+            <span>{successMessage}</span>
             {wpPost.link && (
               <a
                 href={wpPost.link}
@@ -94,14 +120,20 @@ export default function PublishButton() {
       >
         <Upload className="h-5 w-5 mr-2" />
         {isPublishing
-          ? 'Wird veröffentlicht...'
+          ? isUpdate
+            ? 'Wird aktualisiert...'
+            : 'Wird veröffentlicht...'
+          : isUpdate
+          ? 'Draft in WordPress aktualisieren'
           : 'Als Draft in WordPress veröffentlichen'}
       </Button>
 
       {lastPublishedLink && !isPublishing && (
         <div className="text-sm bg-green-50 border border-green-200 rounded px-3 py-2">
           <div className="flex items-center gap-2">
-            <span className="text-green-800">Zuletzt veröffentlicht:</span>
+            <span className="text-green-800">
+              {isUpdate ? 'Draft aktualisiert:' : 'Draft erstellt:'}
+            </span>
             <a
               href={lastPublishedLink}
               target="_blank"

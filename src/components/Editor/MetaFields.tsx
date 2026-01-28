@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useEditorStore } from '@/stores/editor-store';
 import Input from '@/components/UI/Input';
 import Label from '@/components/UI/Label';
@@ -18,6 +19,14 @@ export default function MetaFields() {
   const meta = useEditorStore((state) => state.post.meta);
   const setMeta = useEditorStore((state) => state.setMeta);
 
+  // Local state for tag input to allow free typing
+  const [tagInput, setTagInput] = useState(meta.tags?.join(', ') || '');
+
+  // Sync local state with store when meta.tags changes externally
+  useEffect(() => {
+    setTagInput(meta.tags?.join(', ') || '');
+  }, [meta.tags]);
+
   const handleCategoryToggle = (category: string) => {
     const currentCategories = meta.categories || [];
     const newCategories = currentCategories.includes(category)
@@ -26,8 +35,9 @@ export default function MetaFields() {
     setMeta({ categories: newCategories });
   };
 
-  const handleTagsChange = (tagsString: string) => {
-    const tags = tagsString
+  const handleTagsBlur = () => {
+    // Parse tags when user leaves the input field
+    const tags = tagInput
       .split(',')
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0);
@@ -99,11 +109,24 @@ export default function MetaFields() {
           <Input
             id="meta-tags"
             type="text"
-            value={meta.tags?.join(', ') || ''}
-            onChange={(e) => handleTagsChange(e.target.value)}
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onBlur={handleTagsBlur}
             placeholder="react, typescript, web development"
             fullWidth
           />
+          {meta.tags && meta.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {meta.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md bg-blue-100 text-blue-800"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
           <p className="text-xs text-neutral-500 mt-1">
             Mehrere Tags mit Komma trennen
           </p>

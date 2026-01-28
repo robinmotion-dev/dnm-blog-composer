@@ -6,6 +6,7 @@ export interface ImageData {
   alt: string;
   caption: string;
   description: string;
+  wpMediaId?: number | null; // WordPress Media ID (for already uploaded images)
 }
 
 export interface ContentBlock {
@@ -49,6 +50,7 @@ export interface BlogPost {
   meta: MetaData;
   seo: SEOData;
   relatedPosts: RelatedPost[];
+  wpPostId?: number | null; // WordPress Post ID for updates
 }
 
 export interface EditorState {

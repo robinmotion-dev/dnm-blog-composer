@@ -1,7 +1,7 @@
 // src/app/api/publish/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createDraft } from '@/lib/wordpress';
+import { createDraft, updateDraft } from '@/lib/wordpress';
 import { BlogPost } from '@/types';
 
 export async function POST(request: NextRequest) {
@@ -16,13 +16,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create draft in WordPress
-    const wpPost = await createDraft(post);
+    let result;
+    let message;
+
+    // Check if this is an update or a new post
+    if (post.wpPostId) {
+      // Update existing draft
+      result = await updateDraft(post.wpPostId, post);
+      message = 'Draft successfully updated in WordPress';
+    } else {
+      // Create new draft
+      result = await createDraft(post);
+      message = 'Draft successfully created in WordPress';
+    }
 
     return NextResponse.json({
       success: true,
-      post: wpPost,
-      message: 'Draft successfully created in WordPress',
+      post: result.post,
+      mediaIds: result.mediaIds,
+      message,
     });
   } catch (error) {
     console.error('Publish error:', error);

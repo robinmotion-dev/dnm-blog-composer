@@ -26,6 +26,8 @@ interface EditorStore {
   setMeta: (meta: Partial<MetaData>) => void;
   setSEO: (seo: Partial<SEOData>) => void;
   setRelatedPosts: (posts: RelatedPost[]) => void;
+  setWpPostId: (id: number) => void;
+  setImageMediaId: (imageType: 'headerImageDesktop' | 'headerImageMobile' | 'featuredImage', mediaId: number) => void;
   resetPost: () => void;
   loadFromStorage: () => void;
   setIsSaving: (isSaving: boolean) => void;
@@ -44,6 +46,7 @@ const createEmptyPost = (): BlogPost => ({
     alt: '',
     caption: '',
     description: '',
+    wpMediaId: null,
   },
   headerImageMobile: {
     file: null,
@@ -51,6 +54,7 @@ const createEmptyPost = (): BlogPost => ({
     alt: '',
     caption: '',
     description: '',
+    wpMediaId: null,
   },
   featuredImage: {
     file: null,
@@ -58,6 +62,7 @@ const createEmptyPost = (): BlogPost => ({
     alt: '',
     caption: '',
     description: '',
+    wpMediaId: null,
   },
   useFeaturedImageFromHeader: false,
   excerpt: '',
@@ -75,6 +80,7 @@ const createEmptyPost = (): BlogPost => ({
     slug: '',
   },
   relatedPosts: [],
+  wpPostId: null,
 });
 
 export const useEditorStore = create<EditorStore>()(
@@ -203,6 +209,22 @@ export const useEditorStore = create<EditorStore>()(
         set((state) => ({
           post: { ...state.post, relatedPosts: posts },
           isDirty: true,
+        })),
+
+      setWpPostId: (id: number) =>
+        set((state) => ({
+          post: { ...state.post, wpPostId: id },
+        })),
+
+      setImageMediaId: (imageType, mediaId) =>
+        set((state) => ({
+          post: {
+            ...state.post,
+            [imageType]: {
+              ...state.post[imageType],
+              wpMediaId: mediaId,
+            },
+          },
         })),
 
       resetPost: () =>

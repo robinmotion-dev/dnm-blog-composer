@@ -1,19 +1,18 @@
 // src/lib/wordpress.ts
 
 import axios, { AxiosError } from 'axios';
-import { BlogPost, ContentBlock } from '@/types';
+import { BlogPost, ContentBlock, ImageData } from '@/types';
 
-// WordPress REST API Types
+// =============================================================================
+// WORDPRESS REST API TYPES
+// =============================================================================
+
 export interface WPMedia {
   id: number;
   source_url: string;
   alt_text: string;
-  caption: {
-    rendered: string;
-  };
-  description: {
-    rendered: string;
-  };
+  caption: { rendered: string };
+  description: { rendered: string };
 }
 
 export interface WPCategory {
@@ -30,9 +29,7 @@ export interface WPTag {
 
 export interface WPPost {
   id: number;
-  title: {
-    rendered: string;
-  };
+  title: { rendered: string };
   slug: string;
   status: 'draft' | 'publish' | 'pending';
   link: string;
@@ -41,24 +38,100 @@ export interface WPPost {
 export interface WPError {
   code: string;
   message: string;
-  data?: {
-    status: number;
-  };
+  data?: { status: number };
 }
 
-// WordPress API Client Configuration
+// =============================================================================
+// CONFIGURATION
+// =============================================================================
+
 const WP_URL = process.env.NEXT_PUBLIC_WP_URL || process.env.WP_URL || '';
 const WP_REST_URL = process.env.NEXT_PUBLIC_WP_REST_URL || process.env.WP_REST_URL || '';
 const WP_USER = process.env.WP_USER || '';
 const WP_APP_PASSWORD = process.env.WP_APP_PASSWORD || '';
 
-// Basic Auth Header
 const getAuthHeader = () => {
   const credentials = Buffer.from(`${WP_USER}:${WP_APP_PASSWORD}`).toString('base64');
-  return {
-    Authorization: `Basic ${credentials}`,
-  };
+  return { Authorization: `Basic ${credentials}` };
 };
+
+// =============================================================================
+// ACF BLOCK FIELD IDS (from your WordPress installation)
+// =============================================================================
+
+const FIELD_IDS = {
+  // Blog Hero Block
+  blogHero: {
+    image: 'field_6308b9807dfe5',
+    mobileImage: 'field_6308b98f7dfe6',
+    post: 'field_6322de3f6c2a7',
+    date: 'field_640664705a3fa',
+    author: 'field_63bef8f0114d2',
+    category: 'field_64066558f20b2',
+  },
+  // Intro Text Block (Content Blocks)
+  introText: {
+    headline: 'field_64b7efe0ba1c3',
+    content: 'field_62610ddb9a17b',
+    offset: 'field_64b7f00fba1c4',
+  },
+  // CTA Block
+  cta: {
+    headline: 'field_626905a06e09a',
+    content: 'field_626905ac6e09b',
+    image: 'field_626905b16e09c',
+  },
+  // Recommended Content Module
+  recommendedContent: {
+    headline: 'field_62d93a6ce366b',
+    recommendedPosts: 'field_62d93a7be366c',
+  },
+  // Common margin/padding fields (shared across blocks)
+  common: {
+    mobileMarginTop: 'field_5ed62d8f1903b',
+    desktopMarginTop: 'field_5ed62dc31903c',
+    mobileMarginBottom: 'field_5ed62de41903d',
+    desktopMarginBottom: 'field_5ed62df71903e',
+    anchor: 'field_5ed62d8f5503b',
+    paddingTopDesktop: 'field_62509e7c3d718',
+    paddingTopMobile: 'field_62509ebd3d71b',
+    paddingBottomDesktop: 'field_62509ec93d71c',
+    paddingBottomMobile: 'field_62509ed83d71d',
+    backgroundColor: 'field_628770b1ab11a',
+  },
+};
+
+// Default margin/padding values
+const DEFAULT_SPACING = {
+  mobileMarginTop: '40',
+  desktopMarginTop: '80',
+  mobileMarginBottom: '40',
+  desktopMarginBottom: '80',
+  anchor: '',
+  paddingTopDesktop: '0',
+  paddingTopMobile: '0',
+  paddingBottomDesktop: '0',
+  paddingBottomMobile: '0',
+  backgroundColor: '',
+};
+
+// Hero block uses different default spacing
+const HERO_SPACING = {
+  mobileMarginTop: '50',
+  desktopMarginTop: '100',
+  mobileMarginBottom: '50',
+  desktopMarginBottom: '100',
+  anchor: '',
+  paddingTopDesktop: '0',
+  paddingTopMobile: '0',
+  paddingBottomDesktop: '0',
+  paddingBottomMobile: '0',
+  backgroundColor: '',
+};
+
+// =============================================================================
+// MEDIA UPLOAD
+// =============================================================================
 
 /**
  * Upload media file to WordPress
@@ -82,16 +155,58 @@ export async function uploadMedia(file: File): Promise<WPMedia> {
 }
 
 /**
+ * Upload media and update its metadata (alt, caption, description)
+ */
+export async function uploadMediaWithMeta(imageData: ImageData): Promise<number | null> {
+  // If image already uploaded, return existing ID
+  if (imageData.wpMediaId) {
+    return imageData.wpMediaId;
+  }
+
+  // If no file to upload, return null
+  if (!imageData.file) {
+    return null;
+  }
+
+  try {
+    // 1. Upload the file
+    const media = await uploadMedia(imageData.file);
+
+    // 2. Update metadata
+    await axios.post(
+      `${WP_REST_URL}/media/${media.id}`,
+      {
+        alt_text: imageData.alt || '',
+        caption: imageData.caption || '',
+        description: imageData.description || '',
+      },
+      {
+        headers: {
+          ...getAuthHeader(),
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return media.id;
+  } catch (error) {
+    console.error('Failed to upload media with meta:', error);
+    throw error;
+  }
+}
+
+// =============================================================================
+// FETCH DATA
+// =============================================================================
+
+/**
  * Get all categories from WordPress
  */
 export async function getCategories(): Promise<WPCategory[]> {
   try {
     const response = await axios.get(`${WP_REST_URL}/categories`, {
-      params: {
-        per_page: 100,
-      },
+      params: { per_page: 100 },
     });
-
     return response.data;
   } catch (error) {
     throw handleWPError(error, 'Failed to fetch categories');
@@ -104,11 +219,8 @@ export async function getCategories(): Promise<WPCategory[]> {
 export async function getTags(): Promise<WPTag[]> {
   try {
     const response = await axios.get(`${WP_REST_URL}/tags`, {
-      params: {
-        per_page: 100,
-      },
+      params: { per_page: 100 },
     });
-
     return response.data;
   } catch (error) {
     throw handleWPError(error, 'Failed to fetch tags');
@@ -127,7 +239,6 @@ export async function getPosts(search?: string): Promise<WPPost[]> {
         ...(search && { search }),
       },
     });
-
     return response.data;
   } catch (error) {
     throw handleWPError(error, 'Failed to fetch posts');
@@ -135,23 +246,384 @@ export async function getPosts(search?: string): Promise<WPPost[]> {
 }
 
 /**
+ * Get category IDs from category names
+ */
+async function getCategoryIds(categoryNames: string[]): Promise<number[]> {
+  if (!categoryNames || categoryNames.length === 0) return [];
+  
+  const allCategories = await getCategories();
+  const ids: number[] = [];
+  
+  for (const name of categoryNames) {
+    const found = allCategories.find(
+      (cat) => cat.name.toLowerCase() === name.toLowerCase() || 
+               cat.slug.toLowerCase() === name.toLowerCase()
+    );
+    if (found) ids.push(found.id);
+  }
+  
+  return ids;
+}
+
+/**
+ * Get or create tags and return their IDs
+ */
+async function getOrCreateTagIds(tagNames: string[]): Promise<number[]> {
+  if (!tagNames || tagNames.length === 0) return [];
+  
+  const ids: number[] = [];
+  
+  for (const name of tagNames) {
+    const trimmed = name.trim();
+    if (!trimmed) continue;
+    
+    try {
+      // Try to find existing tag
+      const response = await axios.get(`${WP_REST_URL}/tags`, {
+        params: { search: trimmed, per_page: 1 },
+      });
+      
+      if (response.data.length > 0 && 
+          response.data[0].name.toLowerCase() === trimmed.toLowerCase()) {
+        ids.push(response.data[0].id);
+      } else {
+        // Create new tag
+        const newTag = await axios.post(
+          `${WP_REST_URL}/tags`,
+          { name: trimmed },
+          { headers: { ...getAuthHeader(), 'Content-Type': 'application/json' } }
+        );
+        ids.push(newTag.data.id);
+      }
+    } catch (error) {
+      console.error(`Failed to get/create tag "${trimmed}":`, error);
+    }
+  }
+  
+  return ids;
+}
+
+// =============================================================================
+// GUTENBERG BLOCK BUILDERS
+// =============================================================================
+
+/**
+ * Build common spacing data for blocks
+ */
+function buildSpacingData(spacing: typeof DEFAULT_SPACING = DEFAULT_SPACING): Record<string, string> {
+  return {
+    [`${FIELD_IDS.common.mobileMarginTop}`]: spacing.mobileMarginTop,
+    [`_${FIELD_IDS.common.mobileMarginTop.replace('field_', '')}`]: FIELD_IDS.common.mobileMarginTop,
+    [`${FIELD_IDS.common.desktopMarginTop}`]: spacing.desktopMarginTop,
+    [`_${FIELD_IDS.common.desktopMarginTop.replace('field_', '')}`]: FIELD_IDS.common.desktopMarginTop,
+    [`${FIELD_IDS.common.mobileMarginBottom}`]: spacing.mobileMarginBottom,
+    [`_${FIELD_IDS.common.mobileMarginBottom.replace('field_', '')}`]: FIELD_IDS.common.mobileMarginBottom,
+    [`${FIELD_IDS.common.desktopMarginBottom}`]: spacing.desktopMarginBottom,
+    [`_${FIELD_IDS.common.desktopMarginBottom.replace('field_', '')}`]: FIELD_IDS.common.desktopMarginBottom,
+    [`${FIELD_IDS.common.anchor}`]: spacing.anchor,
+    [`_${FIELD_IDS.common.anchor.replace('field_', '')}`]: FIELD_IDS.common.anchor,
+    [`${FIELD_IDS.common.paddingTopDesktop}`]: spacing.paddingTopDesktop,
+    [`_${FIELD_IDS.common.paddingTopDesktop.replace('field_', '')}`]: FIELD_IDS.common.paddingTopDesktop,
+    [`${FIELD_IDS.common.paddingTopMobile}`]: spacing.paddingTopMobile,
+    [`_${FIELD_IDS.common.paddingTopMobile.replace('field_', '')}`]: FIELD_IDS.common.paddingTopMobile,
+    [`${FIELD_IDS.common.paddingBottomDesktop}`]: spacing.paddingBottomDesktop,
+    [`_${FIELD_IDS.common.paddingBottomDesktop.replace('field_', '')}`]: FIELD_IDS.common.paddingBottomDesktop,
+    [`${FIELD_IDS.common.paddingBottomMobile}`]: spacing.paddingBottomMobile,
+    [`_${FIELD_IDS.common.paddingBottomMobile.replace('field_', '')}`]: FIELD_IDS.common.paddingBottomMobile,
+    [`${FIELD_IDS.common.backgroundColor}`]: spacing.backgroundColor,
+    [`_${FIELD_IDS.common.backgroundColor.replace('field_', '')}`]: FIELD_IDS.common.backgroundColor,
+  };
+}
+
+/**
+ * Build Blog Hero block
+ */
+function buildBlogHeroBlock(
+  imageId: number | null,
+  mobileImageId: number | null,
+  date: string,
+  author: string,
+  categoryIds: number[],
+  relatedPostIds: number[]
+): string {
+  const data: Record<string, unknown> = {
+    image: imageId || '',
+    [`_image`]: FIELD_IDS.blogHero.image,
+    mobile_image: mobileImageId || '',
+    [`_mobile_image`]: FIELD_IDS.blogHero.mobileImage,
+    post: relatedPostIds.map(String),
+    [`_post`]: FIELD_IDS.blogHero.post,
+    date: date,
+    [`_date`]: FIELD_IDS.blogHero.date,
+    author: author,
+    [`_author`]: FIELD_IDS.blogHero.author,
+    category: categoryIds.map(String),
+    [`_category`]: FIELD_IDS.blogHero.category,
+    // Spacing
+    custom_block_mobile_margin_top: HERO_SPACING.mobileMarginTop,
+    [`_custom_block_mobile_margin_top`]: FIELD_IDS.common.mobileMarginTop,
+    custom_block_desktop_margin_top: HERO_SPACING.desktopMarginTop,
+    [`_custom_block_desktop_margin_top`]: FIELD_IDS.common.desktopMarginTop,
+    custom_block_mobile_margin_bottom: HERO_SPACING.mobileMarginBottom,
+    [`_custom_block_mobile_margin_bottom`]: FIELD_IDS.common.mobileMarginBottom,
+    custom_block_desktop_margin_bottom: HERO_SPACING.desktopMarginBottom,
+    [`_custom_block_desktop_margin_bottom`]: FIELD_IDS.common.desktopMarginBottom,
+    custom_block_anchor: '',
+    [`_custom_block_anchor`]: FIELD_IDS.common.anchor,
+    padding_top_desktop: '0',
+    [`_padding_top_desktop`]: FIELD_IDS.common.paddingTopDesktop,
+    padding_top_mobile: '0',
+    [`_padding_top_mobile`]: FIELD_IDS.common.paddingTopMobile,
+    padding_bottom_desktop: '0',
+    [`_padding_bottom_desktop`]: FIELD_IDS.common.paddingBottomDesktop,
+    padding_bottom_mobile: '0',
+    [`_padding_bottom_mobile`]: FIELD_IDS.common.paddingBottomMobile,
+    background_color: '',
+    [`_background_color`]: FIELD_IDS.common.backgroundColor,
+  };
+
+  return `<!-- wp:acf/blog-hero {"name":"acf/blog-hero","data":${JSON.stringify(data)},"mode":"edit"} /-->`;
+}
+
+/**
+ * Build Intro Text block (for content sections)
+ */
+function buildIntroTextBlock(
+  headline: string,
+  content: string,
+  offset: boolean = false,
+  backgroundColor: string = ''
+): string {
+  const data: Record<string, unknown> = {
+    [FIELD_IDS.introText.headline]: headline,
+    [FIELD_IDS.introText.content]: content,
+    [FIELD_IDS.introText.offset]: offset ? '1' : '0',
+    [FIELD_IDS.common.mobileMarginTop]: DEFAULT_SPACING.mobileMarginTop,
+    [FIELD_IDS.common.desktopMarginTop]: DEFAULT_SPACING.desktopMarginTop,
+    [FIELD_IDS.common.mobileMarginBottom]: DEFAULT_SPACING.mobileMarginBottom,
+    [FIELD_IDS.common.desktopMarginBottom]: DEFAULT_SPACING.desktopMarginBottom,
+    [FIELD_IDS.common.anchor]: '',
+    [FIELD_IDS.common.paddingTopDesktop]: '0',
+    [FIELD_IDS.common.paddingTopMobile]: '0',
+    [FIELD_IDS.common.paddingBottomDesktop]: '0',
+    [FIELD_IDS.common.paddingBottomMobile]: '0',
+    [FIELD_IDS.common.backgroundColor]: backgroundColor,
+  };
+
+  return `<!-- wp:acf/intro-text {"name":"acf/intro-text","data":${JSON.stringify(data)},"align":"left","mode":"edit"} /-->`;
+}
+
+/**
+ * Build CTA block
+ */
+function buildCTABlock(
+  headline: string,
+  content: string,
+  imageId: number | null = null
+): string {
+  const data: Record<string, unknown> = {
+    [FIELD_IDS.cta.headline]: headline,
+    [FIELD_IDS.cta.content]: content,
+    [FIELD_IDS.cta.image]: imageId || '',
+    [FIELD_IDS.common.mobileMarginTop]: DEFAULT_SPACING.mobileMarginTop,
+    [FIELD_IDS.common.desktopMarginTop]: DEFAULT_SPACING.desktopMarginTop,
+    [FIELD_IDS.common.mobileMarginBottom]: DEFAULT_SPACING.mobileMarginBottom,
+    [FIELD_IDS.common.desktopMarginBottom]: DEFAULT_SPACING.desktopMarginBottom,
+    [FIELD_IDS.common.anchor]: '',
+    [FIELD_IDS.common.paddingTopDesktop]: '0',
+    [FIELD_IDS.common.paddingTopMobile]: '0',
+    [FIELD_IDS.common.paddingBottomDesktop]: '0',
+    [FIELD_IDS.common.paddingBottomMobile]: '0',
+    [FIELD_IDS.common.backgroundColor]: '',
+  };
+
+  return `<!-- wp:acf/cta {"name":"acf/cta","data":${JSON.stringify(data)},"mode":"edit"} /-->`;
+}
+
+/**
+ * Build Recommended Content Module block
+ */
+function buildRecommendedContentBlock(
+  headline: string,
+  postIds: number[]
+): string {
+  const data: Record<string, unknown> = {
+    headline: headline,
+    [`_headline`]: FIELD_IDS.recommendedContent.headline,
+    recommended_posts: postIds.map(String),
+    [`_recommended_posts`]: FIELD_IDS.recommendedContent.recommendedPosts,
+    custom_block_mobile_margin_top: DEFAULT_SPACING.mobileMarginTop,
+    [`_custom_block_mobile_margin_top`]: FIELD_IDS.common.mobileMarginTop,
+    custom_block_desktop_margin_top: DEFAULT_SPACING.desktopMarginTop,
+    [`_custom_block_desktop_margin_top`]: FIELD_IDS.common.desktopMarginTop,
+    custom_block_mobile_margin_bottom: DEFAULT_SPACING.mobileMarginBottom,
+    [`_custom_block_mobile_margin_bottom`]: FIELD_IDS.common.mobileMarginBottom,
+    custom_block_desktop_margin_bottom: DEFAULT_SPACING.desktopMarginBottom,
+    [`_custom_block_desktop_margin_bottom`]: FIELD_IDS.common.desktopMarginBottom,
+    custom_block_anchor: '',
+    [`_custom_block_anchor`]: FIELD_IDS.common.anchor,
+    padding_top_desktop: '0',
+    [`_padding_top_desktop`]: FIELD_IDS.common.paddingTopDesktop,
+    padding_top_mobile: '0',
+    [`_padding_top_mobile`]: FIELD_IDS.common.paddingTopMobile,
+    padding_bottom_desktop: '0',
+    [`_padding_bottom_desktop`]: FIELD_IDS.common.paddingBottomDesktop,
+    padding_bottom_mobile: '0',
+    [`_padding_bottom_mobile`]: FIELD_IDS.common.paddingBottomMobile,
+    background_color: '',
+    [`_background_color`]: FIELD_IDS.common.backgroundColor,
+  };
+
+  return `<!-- wp:acf/recommended-content-module {"name":"acf/recommended-content-module","data":${JSON.stringify(data)},"mode":"edit"} /-->`;
+}
+
+// =============================================================================
+// BUILD GUTENBERG CONTENT
+// =============================================================================
+
+/**
+ * Build the complete Gutenberg block content from BlogPost
+ */
+async function buildGutenbergContent(post: BlogPost): Promise<{
+  content: string;
+  headerImageId: number | null;
+  mobileImageId: number | null;
+  featuredImageId: number | null;
+}> {
+  const blocks: string[] = [];
+  
+  // 1. Upload header images
+  let headerImageId: number | null = null;
+  let mobileImageId: number | null = null;
+  let featuredImageId: number | null = null;
+
+  if (post.headerImageDesktop?.file) {
+    headerImageId = await uploadMediaWithMeta(post.headerImageDesktop);
+  }
+
+  if (post.headerImageMobile?.file) {
+    mobileImageId = await uploadMediaWithMeta(post.headerImageMobile);
+  }
+
+  // Featured image (use dedicated or header image)
+  const postWithFeatured = post as BlogPost & { 
+    featuredImage?: ImageData; 
+    useFeaturedImageFromHeader?: boolean 
+  };
+  
+  if (postWithFeatured.featuredImage?.file) {
+    featuredImageId = await uploadMediaWithMeta(postWithFeatured.featuredImage);
+  } else if (postWithFeatured.useFeaturedImageFromHeader && headerImageId) {
+    featuredImageId = headerImageId;
+  }
+
+  // 2. Get category IDs
+  const categoryIds = await getCategoryIds(post.meta.categories);
+
+  // 3. Build Blog Hero block
+  const blogHeroBlock = buildBlogHeroBlock(
+    headerImageId,
+    mobileImageId,
+    post.meta.date || '',
+    post.meta.author || 'DNM',
+    categoryIds,
+    post.relatedPosts?.map(p => p.id) || []
+  );
+  blocks.push(blogHeroBlock);
+
+  // 4. Build Intro Text blocks for each content block
+  for (let i = 0; i < post.blocks.length; i++) {
+    const block = post.blocks[i];
+    
+    if (block.type === 'text') {
+      // First block gets a light background
+      const backgroundColor = i === 0 ? '#e6ecf2' : '';
+      const introBlock = buildIntroTextBlock(
+        block.headline || '',
+        block.content || '',
+        false,
+        backgroundColor
+      );
+      blocks.push(introBlock);
+    } else if (block.type === 'image' && block.image?.file) {
+      // For image blocks, upload the image and create an intro block with just the image
+      // Note: This is a simplification - you might want a dedicated image block
+      const imageId = await uploadMediaWithMeta(block.image);
+      if (imageId) {
+        // Create a content block with the image
+        const imageHtml = `<figure><img src="" data-id="${imageId}" />${block.image.caption ? `<figcaption>${block.image.caption}</figcaption>` : ''}</figure>`;
+        const introBlock = buildIntroTextBlock('', imageHtml, false, '');
+        blocks.push(introBlock);
+      }
+    }
+  }
+
+  // 5. Build Recommended Content block if there are related posts
+  if (post.relatedPosts && post.relatedPosts.length > 0) {
+    const recommendedBlock = buildRecommendedContentBlock(
+      'Ähnliche Artikel',
+      post.relatedPosts.map(p => p.id)
+    );
+    blocks.push(recommendedBlock);
+  }
+
+  return {
+    content: blocks.join('\n\n'),
+    headerImageId,
+    mobileImageId,
+    featuredImageId,
+  };
+}
+
+// =============================================================================
+// CREATE / UPDATE POSTS
+// =============================================================================
+
+/**
  * Create a draft post in WordPress
  */
-export async function createDraft(post: BlogPost): Promise<WPPost> {
+export async function createDraft(post: BlogPost): Promise<{
+  post: WPPost;
+  mediaIds: {
+    headerImageDesktop: number | null;
+    headerImageMobile: number | null;
+    featuredImage: number | null;
+  };
+}> {
   try {
-    // Prepare the post data
-    const postData = {
+    // 1. Build Gutenberg content (includes image uploads)
+    const { content, headerImageId, mobileImageId, featuredImageId } = await buildGutenbergContent(post);
+
+    // 2. Get category and tag IDs
+    const categoryIds = await getCategoryIds(post.meta.categories);
+    const tagIds = await getOrCreateTagIds(post.meta.tags);
+
+    // 3. Prepare post data
+    const postData: Record<string, unknown> = {
       title: post.title,
-      content: buildContentHTML(post),
-      excerpt: post.excerpt,
+      content: content,
+      excerpt: post.excerpt || '',
       status: 'draft',
-      categories: [], // Will be mapped from category names to IDs
-      tags: [], // Will be mapped from tag names to IDs
-      meta: {
-        // ACF fields will go here
-      },
+      slug: post.seo.slug || undefined,
+      categories: categoryIds,
+      tags: tagIds,
     };
 
+    // 4. Add featured image if available
+    if (featuredImageId) {
+      postData.featured_media = featuredImageId;
+    }
+
+    // 5. Add Yoast SEO meta (if Yoast REST API is enabled)
+    if (post.seo.title || post.seo.description || post.seo.focusKeyword) {
+      postData.meta = {
+        _yoast_wpseo_title: post.seo.title || '',
+        _yoast_wpseo_metadesc: post.seo.description || '',
+        _yoast_wpseo_focuskw: post.seo.focusKeyword || '',
+      };
+    }
+
+    // 6. Create the post
     const response = await axios.post(`${WP_REST_URL}/posts`, postData, {
       headers: {
         ...getAuthHeader(),
@@ -159,43 +631,87 @@ export async function createDraft(post: BlogPost): Promise<WPPost> {
       },
     });
 
-    return response.data;
+    return {
+      post: response.data,
+      mediaIds: {
+        headerImageDesktop: headerImageId,
+        headerImageMobile: mobileImageId,
+        featuredImage: featuredImageId,
+      },
+    };
   } catch (error) {
     throw handleWPError(error, 'Failed to create draft');
   }
 }
 
 /**
- * Build HTML content from BlogPost blocks
+ * Update an existing draft post in WordPress
  */
-function buildContentHTML(post: BlogPost): string {
-  let html = '';
+export async function updateDraft(postId: number, post: BlogPost): Promise<{
+  post: WPPost;
+  mediaIds: {
+    headerImageDesktop: number | null;
+    headerImageMobile: number | null;
+    featuredImage: number | null;
+  };
+}> {
+  try {
+    // 1. Build Gutenberg content (includes image uploads)
+    const { content, headerImageId, mobileImageId, featuredImageId } = await buildGutenbergContent(post);
 
-  // Add header images (can be added to ACF or as HTML)
-  // For now, we'll handle them separately through ACF
+    // 2. Get category and tag IDs
+    const categoryIds = await getCategoryIds(post.meta.categories);
+    const tagIds = await getOrCreateTagIds(post.meta.tags);
 
-  // Build content from blocks
-  for (const block of post.blocks) {
-    if (block.type === 'text') {
-      if (block.headline) {
-        html += `<h2>${block.headline}</h2>\n`;
-      }
-      if (block.content) {
-        html += `${block.content}\n`;
-      }
-    } else if (block.type === 'image' && block.image?.preview) {
-      // Image blocks will need to be uploaded first
-      // For now, we'll create a placeholder
-      html += `<!-- IMAGE BLOCK: ${block.id} -->\n`;
+    // 3. Prepare post data
+    const postData: Record<string, unknown> = {
+      title: post.title,
+      content: content,
+      excerpt: post.excerpt || '',
+      slug: post.seo.slug || undefined,
+      categories: categoryIds,
+      tags: tagIds,
+    };
+
+    // 4. Add featured image if available
+    if (featuredImageId) {
+      postData.featured_media = featuredImageId;
     }
-  }
 
-  return html;
+    // 5. Add Yoast SEO meta
+    if (post.seo.title || post.seo.description || post.seo.focusKeyword) {
+      postData.meta = {
+        _yoast_wpseo_title: post.seo.title || '',
+        _yoast_wpseo_metadesc: post.seo.description || '',
+        _yoast_wpseo_focuskw: post.seo.focusKeyword || '',
+      };
+    }
+
+    // 6. Update the post
+    const response = await axios.put(`${WP_REST_URL}/posts/${postId}`, postData, {
+      headers: {
+        ...getAuthHeader(),
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return {
+      post: response.data,
+      mediaIds: {
+        headerImageDesktop: headerImageId,
+        headerImageMobile: mobileImageId,
+        featuredImage: featuredImageId,
+      },
+    };
+  } catch (error) {
+    throw handleWPError(error, 'Failed to update draft');
+  }
 }
 
-/**
- * Handle WordPress API errors
- */
+// =============================================================================
+// ERROR HANDLING
+// =============================================================================
+
 function handleWPError(error: unknown, defaultMessage: string): Error {
   if (axios.isAxiosError(error)) {
     const axiosError = error as AxiosError<WPError>;
@@ -217,6 +733,10 @@ function handleWPError(error: unknown, defaultMessage: string): Error {
   return new Error(defaultMessage);
 }
 
+// =============================================================================
+// UTILITY FUNCTIONS
+// =============================================================================
+
 /**
  * Check if WordPress API is reachable
  */
@@ -226,6 +746,21 @@ export async function checkWPConnection(): Promise<boolean> {
     return response.status === 200;
   } catch (error) {
     console.error('WordPress connection failed:', error);
+    return false;
+  }
+}
+
+/**
+ * Test authentication
+ */
+export async function testAuth(): Promise<boolean> {
+  try {
+    const response = await axios.get(`${WP_REST_URL}/users/me`, {
+      headers: getAuthHeader(),
+    });
+    return response.status === 200;
+  } catch (error) {
+    console.error('WordPress auth test failed:', error);
     return false;
   }
 }
