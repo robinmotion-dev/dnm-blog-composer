@@ -5,6 +5,7 @@ import { useEditorStore } from '@/stores/editor-store';
 import Input from '@/components/UI/Input';
 import Label from '@/components/UI/Label';
 import Button from '@/components/UI/Button';
+import Skeleton from '@/components/UI/Skeleton';
 import { Search, X } from 'lucide-react';
 
 interface WPPost {
@@ -131,8 +132,10 @@ export default function RelatedPosts() {
 
           {/* Loading State */}
           {loading && (
-            <div className="text-sm text-neutral-500 text-center py-2">
-              Lade Artikel...
+            <div className="border border-neutral-300 rounded-lg p-3 space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} height="2rem" />
+              ))}
             </div>
           )}
 

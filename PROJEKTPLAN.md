@@ -934,7 +934,7 @@ acceptance:
 
 ```yaml
 id: TASK-019
-status: pending
+status: done
 priority: medium
 phase: 5
 agent: any
@@ -953,7 +953,7 @@ acceptance:
 
 ```yaml
 id: TASK-020
-status: pending
+status: done
 priority: medium
 phase: 5
 agent: any
@@ -972,7 +972,7 @@ acceptance:
 
 ```yaml
 id: TASK-021
-status: pending
+status: done
 priority: low
 phase: 5
 agent: any

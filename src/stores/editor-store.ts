@@ -31,6 +31,8 @@ interface EditorStore {
   setIsSaving: (isSaving: boolean) => void;
   setIsPublishing: (isPublishing: boolean) => void;
   markAsSaved: () => void;
+  clearDraft: () => void;
+  autosave: () => void;
 }
 
 // Initial empty state for a new blog post
@@ -228,6 +230,32 @@ export const useEditorStore = create<EditorStore>()(
           isDirty: false,
           lastSaved: new Date(),
         }),
+
+      clearDraft: () => {
+        // Clear from localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('dnm-blog-editor-storage');
+        }
+        // Reset to empty state
+        set({
+          post: createEmptyPost(),
+          isDirty: false,
+          lastSaved: null,
+          isSaving: false,
+          isPublishing: false,
+        });
+      },
+
+      autosave: () => {
+        const state = get();
+        // Only autosave if there's content and changes have been made
+        if (state.isDirty) {
+          set({
+            lastSaved: new Date(),
+            isDirty: false,
+          });
+        }
+      },
     }),
     {
       name: 'dnm-blog-editor-storage', // LocalStorage key

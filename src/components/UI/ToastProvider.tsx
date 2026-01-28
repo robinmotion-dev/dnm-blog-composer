@@ -7,7 +7,7 @@ export default function ToastProvider() {
     <Toaster
       position="top-right"
       toastOptions={{
-        duration: 4000,
+        duration: 5000, // 5 seconds as per TASK-020
         style: {
           background: '#fff',
           color: '#171717',

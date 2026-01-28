@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useEditorStore } from '@/stores/editor-store';
 import Button from '@/components/UI/Button';
-import { Upload, Loader2, ExternalLink } from 'lucide-react';
+import { Upload, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function PublishButton() {
@@ -88,21 +88,14 @@ export default function PublishButton() {
         variant="primary"
         size="lg"
         onClick={handlePublish}
-        disabled={isPublishing}
+        loading={isPublishing}
         fullWidth
         className="relative"
       >
-        {isPublishing ? (
-          <>
-            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-            Wird veröffentlicht...
-          </>
-        ) : (
-          <>
-            <Upload className="h-5 w-5 mr-2" />
-            Als Draft in WordPress veröffentlichen
-          </>
-        )}
+        <Upload className="h-5 w-5 mr-2" />
+        {isPublishing
+          ? 'Wird veröffentlicht...'
+          : 'Als Draft in WordPress veröffentlichen'}
       </Button>
 
       {lastPublishedLink && !isPublishing && (
