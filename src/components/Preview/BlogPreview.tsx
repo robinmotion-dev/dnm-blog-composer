@@ -3,25 +3,30 @@
 import { useEditorStore } from '@/stores/editor-store';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
-import PreviewFrame from './PreviewFrame';
+import PreviewFrame, { usePreviewDevice } from './PreviewFrame';
 
-export default function BlogPreview() {
+function PreviewContent() {
   const post = useEditorStore((state) => state.post);
+  const deviceMode = usePreviewDevice();
+  const isMobilePreview = deviceMode === 'mobile';
+  const headerImage =
+    isMobilePreview && post.headerImageMobile.preview
+      ? post.headerImageMobile
+      : post.headerImageDesktop;
 
   return (
-    <PreviewFrame>
-      <article className="p-6 md:p-8">
-        {/* Header Image Desktop */}
-        {post.headerImageDesktop.preview && (
+    <article className="p-6 md:p-8">
+        {/* Header Image (desktop/mobile depending on preview mode) */}
+        {headerImage.preview && (
           <div className="mb-6 -mx-6 md:-mx-8 -mt-6 md:-mt-8">
             <img
-              src={post.headerImageDesktop.preview}
-              alt={post.headerImageDesktop.alt || post.title}
+              src={headerImage.preview}
+              alt={headerImage.alt || post.title}
               className="w-full h-auto"
             />
-            {post.headerImageDesktop.caption && (
+            {headerImage.caption && (
               <p className="text-xs text-neutral-500 mt-2 px-6 md:px-8">
-                {post.headerImageDesktop.caption}
+                {headerImage.caption}
               </p>
             )}
           </div>
@@ -151,7 +156,8 @@ export default function BlogPreview() {
         {!post.title &&
           !post.excerpt &&
           post.blocks.length === 0 &&
-          !post.headerImageDesktop.preview && (
+          !post.headerImageDesktop.preview &&
+          !post.headerImageMobile.preview && (
             <div className="text-center py-12 text-neutral-500">
               <p className="text-lg mb-2">Keine Inhalte vorhanden</p>
               <p className="text-sm">
@@ -160,7 +166,14 @@ export default function BlogPreview() {
               </p>
             </div>
           )}
-      </article>
+    </article>
+  );
+}
+
+export default function BlogPreview() {
+  return (
+    <PreviewFrame>
+      <PreviewContent />
     </PreviewFrame>
   );
 }

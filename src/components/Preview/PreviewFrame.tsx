@@ -1,11 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { Monitor, Smartphone } from 'lucide-react';
 import Button from '@/components/UI/Button';
 
 interface PreviewFrameProps {
   children: React.ReactNode;
+}
+
+const PreviewDeviceContext = createContext<'desktop' | 'mobile'>('desktop');
+
+export function usePreviewDevice() {
+  return useContext(PreviewDeviceContext);
 }
 
 export default function PreviewFrame({ children }: PreviewFrameProps) {
@@ -42,7 +48,9 @@ export default function PreviewFrame({ children }: PreviewFrameProps) {
             deviceMode === 'mobile' ? 'w-[375px]' : 'w-full max-w-4xl'
           }`}
         >
-          {children}
+          <PreviewDeviceContext.Provider value={deviceMode}>
+            {children}
+          </PreviewDeviceContext.Provider>
         </div>
       </div>
     </div>
