@@ -6,14 +6,11 @@ import Input from '@/components/UI/Input';
 import Label from '@/components/UI/Label';
 import Card from '@/components/UI/Card';
 
-// Hardcoded categories for now (can be loaded from WP later)
-const CATEGORIES = [
-  'Technologie',
-  'Design',
-  'Marketing',
-  'Business',
-  'Entwicklung',
-];
+type WPCategory = {
+  id: number;
+  name: string;
+  slug: string;
+};
 
 export default function MetaFields() {
   const meta = useEditorStore((state) => state.post.meta);
@@ -21,11 +18,44 @@ export default function MetaFields() {
 
   // Local state for tag input to allow free typing
   const [tagInput, setTagInput] = useState(meta.tags?.join(', ') || '');
+  const [categories, setCategories] = useState<WPCategory[]>([]);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
 
   // Sync local state with store when meta.tags changes externally
   useEffect(() => {
     setTagInput(meta.tags?.join(', ') || '');
   }, [meta.tags]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to load categories');
+        }
+
+        if (isMounted) {
+          setCategories(data.categories || []);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setCategoriesError(
+            error instanceof Error ? error.message : 'Failed to load categories'
+          );
+        }
+      }
+    };
+
+    loadCategories();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleCategoryToggle = (category: string) => {
     const currentCategories = meta.categories || [];
@@ -86,20 +116,30 @@ export default function MetaFields() {
         <div>
           <Label>Kategorien</Label>
           <div className="flex flex-wrap gap-2 mt-2">
-            {CATEGORIES.map((category) => (
+            {categories.map((category) => (
               <label
-                key={category}
+                key={category.id}
                 className="inline-flex items-center cursor-pointer"
               >
                 <input
                   type="checkbox"
-                  checked={meta.categories?.includes(category) || false}
-                  onChange={() => handleCategoryToggle(category)}
+                  checked={meta.categories?.includes(category.name) || false}
+                  onChange={() => handleCategoryToggle(category.name)}
                   className="mr-2 h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="text-sm text-neutral-700">{category}</span>
+                <span className="text-sm text-neutral-700">
+                  {category.name}
+                </span>
               </label>
             ))}
+            {categories.length === 0 && !categoriesError && (
+              <span className="text-sm text-neutral-500">
+                Kategorien werden geladen...
+              </span>
+            )}
+            {categoriesError && (
+              <span className="text-sm text-red-600">{categoriesError}</span>
+            )}
           </div>
         </div>
 

@@ -1141,6 +1141,35 @@ Total:                   [█████████░] 24/25 tasks
 
 ---
 
+## Issue #7: ACF blocks missing images (? BEHOBEN)
+
+**Problem:** Blog-Hero und Bild-Block waren im WP Editor leer.
+
+**Ursache:** ACF-Daten nur mit Feldnamen gesetzt; Bild-Block hatte leeren img src.
+
+**Loesung:**
+
+- ACF-Daten zusaetzlich mit Feld-Keys befuellt (field_...)
+- Image-Block setzt src ueber Media-URL (per REST)
+
+**Status:** ? Behoben und getestet.
+
+---
+
+## Issue #8: Kategorien stimmen nicht mit WP ueberein (? BEHOBEN)
+
+**Problem:** Kategorien in der UI waren hardcoded und stimmten nicht mit WP ueberein.
+
+**Ursache:** MetaFields nutzte eine statische Liste statt WP-Kategorien.
+
+**Loesung:**
+
+- Kategorien werden aus `/api/categories` geladen und angezeigt
+
+**Status:** ? Behoben und getestet.
+
+---
+
 _Dieses Dokument wird von KI-Agenten gelesen und aktualisiert._
 
 _Version 1.1 - 2026-01-28_
