@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Upload, X } from 'lucide-react';
 import { ImageData } from '@/types';
 import Input from '@/components/UI/Input';
@@ -21,6 +21,75 @@ export default function ImageUploader({
 }: ImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const latestImageRef = useRef<ImageData>(image);
+
+  useEffect(() => {
+    latestImageRef.current = image;
+  }, [image]);
+
+  const uploadFile = async (file: File) => {
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('alt', latestImageRef.current.alt || '');
+      formData.append('caption', latestImageRef.current.caption || '');
+      formData.append('description', latestImageRef.current.description || '');
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Upload failed');
+      }
+
+      if (data.mediaId) {
+        onChange({
+          ...latestImageRef.current,
+          wpMediaId: data.mediaId,
+        });
+      }
+    } catch (error) {
+      setUploadError(
+        error instanceof Error ? error.message : 'Upload failed'
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const updateMeta = async (nextImage: ImageData) => {
+    if (!nextImage.wpMediaId) return;
+
+    try {
+      const formData = new FormData();
+      formData.append('mediaId', String(nextImage.wpMediaId));
+      formData.append('alt', nextImage.alt || '');
+      formData.append('caption', nextImage.caption || '');
+      formData.append('description', nextImage.description || '');
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Meta update failed');
+      }
+    } catch (error) {
+      setUploadError(
+        error instanceof Error ? error.message : 'Meta update failed'
+      );
+    }
+  };
 
   const handleFileSelect = (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -35,6 +104,7 @@ export default function ImageUploader({
         file,
         preview: e.target?.result as string,
       });
+      uploadFile(file);
     };
     reader.readAsDataURL(file);
   };
@@ -76,6 +146,7 @@ export default function ImageUploader({
       alt: '',
       caption: '',
       description: '',
+      wpMediaId: null,
     });
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -103,6 +174,12 @@ export default function ImageUploader({
             Klicke hier oder ziehe ein Bild hierher
           </p>
           <p className="text-sm text-neutral-500">PNG, JPG, GIF bis 10MB</p>
+          {isUploading && (
+            <p className="text-sm text-blue-600 mt-2">Upload l„uft...</p>
+          )}
+          {uploadError && (
+            <p className="text-sm text-red-600 mt-2">{uploadError}</p>
+          )}
           <input
             ref={fileInputRef}
             type="file"
@@ -128,6 +205,12 @@ export default function ImageUploader({
               <X className="h-4 w-4" />
             </Button>
           </div>
+          {isUploading && (
+            <p className="text-sm text-blue-600">Upload l„uft...</p>
+          )}
+          {uploadError && (
+            <p className="text-sm text-red-600">{uploadError}</p>
+          )}
 
           <div>
             <Label htmlFor={`${label}-alt`}>Alt-Text</Label>
@@ -136,6 +219,7 @@ export default function ImageUploader({
               type="text"
               value={image.alt}
               onChange={(e) => onChange({ ...image, alt: e.target.value })}
+              onBlur={() => updateMeta(latestImageRef.current)}
               placeholder="Beschreibung für Screenreader"
               fullWidth
             />
@@ -148,6 +232,7 @@ export default function ImageUploader({
               type="text"
               value={image.caption}
               onChange={(e) => onChange({ ...image, caption: e.target.value })}
+              onBlur={() => updateMeta(latestImageRef.current)}
               placeholder="Optionale Bildunterschrift"
               fullWidth
             />
@@ -161,6 +246,7 @@ export default function ImageUploader({
               onChange={(e) =>
                 onChange({ ...image, description: e.target.value })
               }
+              onBlur={() => updateMeta(latestImageRef.current)}
               placeholder="Zusätzliche Bildbeschreibung"
               rows={2}
               fullWidth

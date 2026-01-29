@@ -137,6 +137,24 @@ const HERO_SPACING = {
  * Upload media file to WordPress
  */
 export async function uploadMedia(file: File): Promise<WPMedia> {
+  // Validate that file is actually a File object
+  if (!file || !(file instanceof File)) {
+    console.error('[uploadMedia] Invalid file object:', file);
+    throw new Error('Invalid file object provided for upload');
+  }
+
+  // Validate file size
+  if (file.size === 0) {
+    console.error('[uploadMedia] File is empty:', file.name);
+    throw new Error('File is empty and cannot be uploaded');
+  }
+
+  console.log('[uploadMedia] Uploading file:', {
+    name: file.name,
+    size: file.size,
+    type: file.type,
+  });
+
   try {
     const formData = new FormData();
     formData.append('file', file);
@@ -148,8 +166,10 @@ export async function uploadMedia(file: File): Promise<WPMedia> {
       },
     });
 
+    console.log('[uploadMedia] Upload successful, media ID:', response.data.id);
     return response.data;
   } catch (error) {
+    console.error('[uploadMedia] Upload failed:', error);
     throw handleWPError(error, 'Failed to upload media');
   }
 }
@@ -158,13 +178,21 @@ export async function uploadMedia(file: File): Promise<WPMedia> {
  * Upload media and update its metadata (alt, caption, description)
  */
 export async function uploadMediaWithMeta(imageData: ImageData): Promise<number | null> {
+  console.log('[uploadMediaWithMeta] ImageData:', {
+    hasFile: !!imageData.file,
+    wpMediaId: imageData.wpMediaId,
+    preview: imageData.preview ? imageData.preview.substring(0, 50) : null,
+  });
+
   // If image already uploaded, return existing ID
   if (imageData.wpMediaId) {
+    console.log('[uploadMediaWithMeta] Using existing Media ID:', imageData.wpMediaId);
     return imageData.wpMediaId;
   }
 
   // If no file to upload, return null
   if (!imageData.file) {
+    console.log('[uploadMediaWithMeta] No file to upload, returning null');
     return null;
   }
 
@@ -193,6 +221,29 @@ export async function uploadMediaWithMeta(imageData: ImageData): Promise<number 
     console.error('Failed to upload media with meta:', error);
     throw error;
   }
+}
+
+/**
+ * Update metadata for an existing media item
+ */
+export async function updateMediaMeta(
+  mediaId: number,
+  meta: { alt?: string; caption?: string; description?: string }
+): Promise<void> {
+  await axios.post(
+    `${WP_REST_URL}/media/${mediaId}`,
+    {
+      alt_text: meta.alt || '',
+      caption: meta.caption || '',
+      description: meta.description || '',
+    },
+    {
+      headers: {
+        ...getAuthHeader(),
+        'Content-Type': 'application/json',
+      },
+    }
+  );
 }
 
 // =============================================================================
@@ -242,6 +293,24 @@ export async function getPosts(search?: string): Promise<WPPost[]> {
     return response.data;
   } catch (error) {
     throw handleWPError(error, 'Failed to fetch posts');
+  }
+}
+
+/**
+ * Get media URL by attachment ID
+ */
+async function getMediaUrl(mediaId: number): Promise<string> {
+  try {
+    const response = await axios.get(`${WP_REST_URL}/media/${mediaId}`, {
+      headers: {
+        ...getAuthHeader(),
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.data?.source_url || '';
+  } catch (error) {
+    console.error('Failed to fetch media URL:', error);
+    return '';
   }
 }
 
@@ -349,16 +418,22 @@ function buildBlogHeroBlock(
   const data: Record<string, unknown> = {
     image: imageId || '',
     [`_image`]: FIELD_IDS.blogHero.image,
+    [FIELD_IDS.blogHero.image]: imageId || '',
     mobile_image: mobileImageId || '',
     [`_mobile_image`]: FIELD_IDS.blogHero.mobileImage,
+    [FIELD_IDS.blogHero.mobileImage]: mobileImageId || '',
     post: relatedPostIds.map(String),
     [`_post`]: FIELD_IDS.blogHero.post,
+    [FIELD_IDS.blogHero.post]: relatedPostIds.map(String),
     date: date,
     [`_date`]: FIELD_IDS.blogHero.date,
+    [FIELD_IDS.blogHero.date]: date,
     author: author,
     [`_author`]: FIELD_IDS.blogHero.author,
+    [FIELD_IDS.blogHero.author]: author,
     category: categoryIds.map(String),
     [`_category`]: FIELD_IDS.blogHero.category,
+    [FIELD_IDS.blogHero.category]: categoryIds.map(String),
     // Spacing
     custom_block_mobile_margin_top: HERO_SPACING.mobileMarginTop,
     [`_custom_block_mobile_margin_top`]: FIELD_IDS.common.mobileMarginTop,
@@ -450,8 +525,10 @@ function buildRecommendedContentBlock(
   const data: Record<string, unknown> = {
     headline: headline,
     [`_headline`]: FIELD_IDS.recommendedContent.headline,
+    [FIELD_IDS.recommendedContent.headline]: headline,
     recommended_posts: postIds.map(String),
     [`_recommended_posts`]: FIELD_IDS.recommendedContent.recommendedPosts,
+    [FIELD_IDS.recommendedContent.recommendedPosts]: postIds.map(String),
     custom_block_mobile_margin_top: DEFAULT_SPACING.mobileMarginTop,
     [`_custom_block_mobile_margin_top`]: FIELD_IDS.common.mobileMarginTop,
     custom_block_desktop_margin_top: DEFAULT_SPACING.desktopMarginTop,
@@ -497,22 +574,42 @@ async function buildGutenbergContent(post: BlogPost): Promise<{
   let mobileImageId: number | null = null;
   let featuredImageId: number | null = null;
 
-  if (post.headerImageDesktop?.file) {
-    headerImageId = await uploadMediaWithMeta(post.headerImageDesktop);
+  // Check if we have desktop header image (either as file or already uploaded)
+  if (post.headerImageDesktop) {
+    if (post.headerImageDesktop.wpMediaId) {
+      console.log('[buildGutenbergContent] Using existing headerImageDesktop wpMediaId:', post.headerImageDesktop.wpMediaId);
+      headerImageId = post.headerImageDesktop.wpMediaId;
+    } else if (post.headerImageDesktop.file) {
+      console.log('[buildGutenbergContent] Uploading new headerImageDesktop');
+      headerImageId = await uploadMediaWithMeta(post.headerImageDesktop);
+    }
   }
 
-  if (post.headerImageMobile?.file) {
-    mobileImageId = await uploadMediaWithMeta(post.headerImageMobile);
+  // Check if we have mobile header image (either as file or already uploaded)
+  if (post.headerImageMobile) {
+    if (post.headerImageMobile.wpMediaId) {
+      console.log('[buildGutenbergContent] Using existing headerImageMobile wpMediaId:', post.headerImageMobile.wpMediaId);
+      mobileImageId = post.headerImageMobile.wpMediaId;
+    } else if (post.headerImageMobile.file) {
+      console.log('[buildGutenbergContent] Uploading new headerImageMobile');
+      mobileImageId = await uploadMediaWithMeta(post.headerImageMobile);
+    }
   }
 
   // Featured image (use dedicated or header image)
-  const postWithFeatured = post as BlogPost & { 
-    featuredImage?: ImageData; 
-    useFeaturedImageFromHeader?: boolean 
+  const postWithFeatured = post as BlogPost & {
+    featuredImage?: ImageData;
+    useFeaturedImageFromHeader?: boolean
   };
-  
-  if (postWithFeatured.featuredImage?.file) {
-    featuredImageId = await uploadMediaWithMeta(postWithFeatured.featuredImage);
+
+  if (postWithFeatured.featuredImage) {
+    if (postWithFeatured.featuredImage.wpMediaId) {
+      console.log('[buildGutenbergContent] Using existing featuredImage wpMediaId:', postWithFeatured.featuredImage.wpMediaId);
+      featuredImageId = postWithFeatured.featuredImage.wpMediaId;
+    } else if (postWithFeatured.featuredImage.file) {
+      console.log('[buildGutenbergContent] Uploading new featuredImage');
+      featuredImageId = await uploadMediaWithMeta(postWithFeatured.featuredImage);
+    }
   } else if (postWithFeatured.useFeaturedImageFromHeader && headerImageId) {
     featuredImageId = headerImageId;
   }
@@ -545,13 +642,21 @@ async function buildGutenbergContent(post: BlogPost): Promise<{
         backgroundColor
       );
       blocks.push(introBlock);
-    } else if (block.type === 'image' && block.image?.file) {
-      // For image blocks, upload the image and create an intro block with just the image
-      // Note: This is a simplification - you might want a dedicated image block
-      const imageId = await uploadMediaWithMeta(block.image);
+    } else if (block.type === 'image' && block.image) {
+      // For image blocks, use existing media ID or upload new image
+      let imageId: number | null = null;
+
+      if (block.image.wpMediaId) {
+        console.log('[buildGutenbergContent] Using existing image block wpMediaId:', block.image.wpMediaId);
+        imageId = block.image.wpMediaId;
+      } else if (block.image.file) {
+        console.log('[buildGutenbergContent] Uploading new image block');
+        imageId = await uploadMediaWithMeta(block.image);
+      }
+
       if (imageId) {
-        // Create a content block with the image
-        const imageHtml = `<figure><img src="" data-id="${imageId}" />${block.image.caption ? `<figcaption>${block.image.caption}</figcaption>` : ''}</figure>`;
+        const imageUrl = await getMediaUrl(imageId);
+        const imageHtml = `<figure><img src="${imageUrl}" data-id="${imageId}" class="wp-image-${imageId}" />${block.image.caption ? `<figcaption>${block.image.caption}</figcaption>` : ''}</figure>`;
         const introBlock = buildIntroTextBlock('', imageHtml, false, '');
         blocks.push(introBlock);
       }

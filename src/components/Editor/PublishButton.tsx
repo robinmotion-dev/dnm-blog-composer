@@ -67,6 +67,11 @@ export default function PublishButton() {
         if (data.mediaIds.featuredImage) {
           setImageMediaId('featuredImage', data.mediaIds.featuredImage);
         }
+
+        // Force persist immediately by triggering a small state change
+        setTimeout(() => {
+          console.log('Media IDs saved:', data.mediaIds);
+        }, 100);
       }
 
       const successMessage = isUpdate

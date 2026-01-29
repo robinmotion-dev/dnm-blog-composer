@@ -1,8 +1,8 @@
 # DNM Blog Composer – Projektplan
 
-> **Version:** 1.0  
-> **Status:** 🟡 Setup  
-> **Letzte Aktualisierung:** 2026-01-25
+> **Version:** 1.2
+> **Status:** 🟢 Phase 5 - Final Polish
+> **Letzte Aktualisierung:** 2026-01-29
 
 ---
 
@@ -24,11 +24,32 @@ project:
     editor: Tiptap
     state: Zustand
     api: Next.js API Routes
-    target: WordPress REST API + ACF
+    target: WordPress REST API + ACF Gutenberg Blocks
   hosting: DNM Server (Self-hosted)
   auth: None (internal use only)
   users: 2-3 internal team members
 ```
+
+---
+
+## ⚠️ WICHTIGE ARCHITEKTUR-INFO
+
+### WordPress verwendet ACF Gutenberg Blocks (NICHT klassische ACF-Felder!)
+
+Die DNM WordPress-Installation nutzt **ACF Blocks** im Gutenberg-Editor. Das bedeutet:
+
+- Daten werden **NICHT** in `post.acf` Feldern gespeichert
+- Daten werden als **Gutenberg Block-Kommentare** im `post_content` gespeichert
+- Format: `<!-- wp:acf/block-name {"name":"acf/block-name","data":{...}} /-->`
+
+### Verwendete ACF Blocks:
+
+| Block-Name | Zweck |
+|------------|-------|
+| `acf/blog-hero` | Header mit Bild, Datum, Autor, Kategorie |
+| `acf/intro-text` | Content-Blöcke (Headline + WYSIWYG) |
+| `acf/cta` | Call-to-Action Block |
+| `acf/recommended-content-module` | Ähnliche Artikel |
 
 ---
 
@@ -388,64 +409,6 @@ acceptance:
   - Keine TypeScript Errors
 ```
 
-**Beschreibung:** Erstelle alle TypeScript Interfaces für das Projekt:
-
-```typescript
-// src/types/index.ts
-
-export interface ImageData {
-  file: File | null;
-  preview: string;
-  alt: string;
-  caption: string;
-  description: string;
-}
-
-export interface ContentBlock {
-  id: string;
-  headline: string;
-  content: string; // HTML from Tiptap
-}
-
-export interface SEOData {
-  title: string;
-  description: string;
-  focusKeyword: string;
-  slug: string;
-}
-
-export interface MetaData {
-  date: string;
-  author: string;
-  categories: string[];
-  tags: string[];
-}
-
-export interface RelatedPost {
-  id: number;
-  title: string;
-}
-
-export interface BlogPost {
-  title: string;
-  headerImageDesktop: ImageData;
-  headerImageMobile: ImageData;
-  excerpt: string;
-  blocks: ContentBlock[];
-  meta: MetaData;
-  seo: SEOData;
-  relatedPosts: RelatedPost[];
-}
-
-export interface EditorState {
-  post: BlogPost;
-  isDirty: boolean;
-  lastSaved: Date | null;
-  isSaving: boolean;
-  isPublishing: boolean;
-}
-```
-
 ---
 
 ### TASK-002: Zustand Store erstellen
@@ -464,34 +427,6 @@ acceptance:
   - Alle Actions für CRUD auf BlogPost
   - LocalStorage Sync implementiert
 ```
-
-**Beschreibung:** Erstelle den zentralen State Store mit Zustand:
-
-```typescript
-// src/stores/editor-store.ts
-
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { BlogPost, ContentBlock, ImageData, SEOData, MetaData, RelatedPost } from '@/types';
-
-// ... Implementation
-```
-
-Actions die benötigt werden:
-
-- `setTitle(title: string)`
-- `setExcerpt(excerpt: string)`
-- `setHeaderImageDesktop(image: ImageData)`
-- `setHeaderImageMobile(image: ImageData)`
-- `addBlock()`
-- `updateBlock(id: string, data: Partial<ContentBlock>)`
-- `removeBlock(id: string)`
-- `reorderBlocks(fromIndex: number, toIndex: number)`
-- `setMeta(meta: Partial<MetaData>)`
-- `setSEO(seo: Partial<SEOData>)`
-- `setRelatedPosts(posts: RelatedPost[])`
-- `resetPost()`
-- `loadFromStorage()`
 
 ---
 
@@ -513,18 +448,6 @@ acceptance:
   - Editor links, Preview rechts
   - Responsive (auf kleinen Screens stacked)
   - Header mit App-Name und Status-Anzeige
-```
-
-**Beschreibung:** Erstelle das Haupt-Layout mit Split-View:
-
-```
-┌─────────────────────────────────────────────────────┐
-│  DNM Blog Composer              [Autosave ✓] [Push] │
-├────────────────────────┬────────────────────────────┤
-│                        │                            │
-│  EDITOR (scrollable)   │  PREVIEW (scrollable)      │
-│                        │                            │
-└────────────────────────┴────────────────────────────┘
 ```
 
 ---
@@ -770,14 +693,6 @@ acceptance:
   - useFeaturedImageFromHeader Option (boolean) im Store
 ```
 
-**Beschreibung:** Erweitere die Types und den Store um Featured Image Support:
-
-- Neues Feld `featuredImage: ImageData` im BlogPost Interface
-- Neues Feld `useFeaturedImageFromHeader: boolean` (default: false)
-- Action `setFeaturedImage(image: ImageData)`
-- Action `setUseFeaturedImageFromHeader(use: boolean)`
-- Logik: Wenn `useFeaturedImageFromHeader` true ist, wird headerImageDesktop als Teaserbild verwendet (gecroppt)
-
 ---
 
 ### TASK-014B: FeaturedImageUploader Komponente
@@ -797,16 +712,6 @@ acceptance:
   - Wenn Checkbox aktiv: Zeige Preview mit Crop-Hinweis
   - Position nach BlockList in page.tsx
 ```
-
-**Beschreibung:** Erstelle Komponente für das Featured Image:
-- Verwendet die bestehende ImageUploader Komponente
-- Zusätzliche Checkbox: "Header-Bild (Desktop) als Teaserbild verwenden"
-- Wenn Checkbox aktiv:
-  - Zeige Info-Text: "Das Desktop Header-Bild wird automatisch als Teaserbild verwendet (wird von links/rechts gleichmäßig auf Quadrat gecroppt)"
-  - Deaktiviere den Upload-Bereich
-  - Zeige Preview des Header-Bildes
-- Wenn Checkbox inaktiv:
-  - Normaler ImageUploader für separates Teaserbild
 
 ---
 
@@ -833,35 +738,96 @@ acceptance:
   - Drag & Drop funktioniert für beide Block-Typen
 ```
 
-**Beschreibung:** Ermöglicht das Einfügen von Bildern zwischen Textblocks:
-
-- ContentBlock Interface erweitert um `type: 'text' | 'image'`
-- Text-Blocks: `headline` + `content` (wie bisher)
-- Bild-Blocks: `image: ImageData` mit Alt, Caption, Description
-- BlockList zeigt zwei Buttons: "Textblock hinzufügen" und "Bildblock hinzufügen"
-- ContentBlock Komponente rendert je nach type unterschiedlich
-- BlogPreview zeigt Bilder als `<figure>` mit Caption
-- Drag & Drop funktioniert unverändert für beide Typen
-
 ---
 
 ## Phase 4: WordPress Integration
 
-### TASK-015: WordPress API Client
+### TASK-015: WordPress API Client (ACF Gutenberg Blocks)
 
 ```yaml
 id: TASK-015
 status: done
-priority: high
+priority: critical
 phase: 4
 agent: any
 files:
   - src/lib/wordpress.ts
 acceptance:
-  - Funktionen: createDraft, uploadMedia, getCategories, getTags, getPosts
-  - Error Handling
-  - TypeScript Types für WP Responses
+  - Generiert Gutenberg ACF Block Format (NICHT klassische ACF-Felder!)
+  - Bilder werden zu WP Media Library hochgeladen
+  - Blog Hero Block mit korrekten Field-IDs
+  - Intro Text Blocks für Content
+  - Recommended Content Module für Related Posts
+  - Alle Field-IDs aus WordPress übernommen
+  - wpMediaId Tracking für bereits hochgeladene Bilder
+  - Draft Update Funktionalität (kein erneutes Hochladen von Bildern)
 ```
+
+**KRITISCH - ACF BLOCK FORMAT:**
+
+WordPress erwartet Content im Gutenberg Block-Format:
+
+```html
+<!-- wp:acf/blog-hero {"name":"acf/blog-hero","data":{"image":123,"_image":"field_xxx",...}} /-->
+<!-- wp:acf/intro-text {"name":"acf/intro-text","data":{"field_xxx":"Headline","field_yyy":"Content"}} /-->
+```
+
+**Field-IDs aus WordPress:**
+
+```typescript
+const FIELD_IDS = {
+  // Blog Hero Block
+  blogHero: {
+    image: 'field_6308b9807dfe5',
+    mobileImage: 'field_6308b98f7dfe6',
+    post: 'field_6322de3f6c2a7',
+    date: 'field_640664705a3fa',
+    author: 'field_63bef8f0114d2',
+    category: 'field_64066558f20b2',
+  },
+  // Intro Text Block
+  introText: {
+    headline: 'field_64b7efe0ba1c3',
+    content: 'field_62610ddb9a17b',
+    offset: 'field_64b7f00fba1c4',
+  },
+  // CTA Block
+  cta: {
+    headline: 'field_626905a06e09a',
+    content: 'field_626905ac6e09b',
+    image: 'field_626905b16e09c',
+  },
+  // Recommended Content Module
+  recommendedContent: {
+    headline: 'field_62d93a6ce366b',
+    recommendedPosts: 'field_62d93a7be366c',
+  },
+  // Common spacing fields
+  common: {
+    mobileMarginTop: 'field_5ed62d8f1903b',
+    desktopMarginTop: 'field_5ed62dc31903c',
+    mobileMarginBottom: 'field_5ed62de41903d',
+    desktopMarginBottom: 'field_5ed62df71903e',
+    anchor: 'field_5ed62d8f5503b',
+    paddingTopDesktop: 'field_62509e7c3d718',
+    paddingTopMobile: 'field_62509ebd3d71b',
+    paddingBottomDesktop: 'field_62509ec93d71c',
+    paddingBottomMobile: 'field_62509ed83d71d',
+    backgroundColor: 'field_628770b1ab11a',
+  },
+};
+```
+
+**Funktionen die implementiert werden müssen:**
+
+- `uploadMedia(file: File)` → Lädt Bild hoch, gibt WPMedia zurück
+- `uploadMediaWithMeta(imageData: ImageData)` → Lädt Bild + setzt Alt/Caption
+- `buildBlogHeroBlock(...)` → Generiert Blog Hero Gutenberg Block
+- `buildIntroTextBlock(...)` → Generiert Intro Text Gutenberg Block  
+- `buildRecommendedContentBlock(...)` → Generiert Related Posts Block
+- `buildGutenbergContent(post: BlogPost)` → Kombiniert alle Blöcke
+- `createDraft(post: BlogPost)` → Erstellt Post mit Gutenberg Content
+- `updateDraft(postId, post)` → Aktualisiert bestehenden Post
 
 ---
 
@@ -1008,38 +974,56 @@ acceptance:
 # 📊 Progress Tracking
 
 ```
-Phase 1: Grundgerüst     [░░░░░░░░░░] 0/4  tasks
-Phase 2: Editor          [░░░░░░░░░░] 0/7  tasks
-Phase 3: SEO & Preview   [░░░░░░░░░░] 0/3  tasks
-Phase 4: WP Integration  [░░░░░░░░░░] 0/4  tasks
-Phase 5: Polish          [░░░░░░░░░░] 0/4  tasks
+Phase 1: Grundgerüst     [██████████] 4/4  tasks ✓
+Phase 2: Editor          [██████████] 7/7  tasks ✓
+Phase 3: SEO & Preview   [██████████] 6/6  tasks ✓
+Phase 4: WP Integration  [██████████] 4/4  tasks ✓
+Phase 5: Polish          [███████░░░] 3/4  tasks (TASK-022 pending)
 ─────────────────────────────────────────────
-Total:                   [░░░░░░░░░░] 0/22 tasks
+Total:                   [█████████░] 24/25 tasks
 ```
 
 ---
 
-# 🔧 Konfigurationsdateien
+# 🔧 ACF Block Referenz
 
-## ACF Field Mapping (TODO: Verifizieren!)
+## Beispiel: Vollständiger Blog Post Content
 
-```yaml
-# Diese Feldnamen müssen im WP-Backend geprüft werden
-acf_fields:
-  header_image_desktop: "image"
-  header_image_mobile: "mobile_image"
-  date: "date"
-  author: "autor"
-  category: "category"
-  content_blocks: "content_blocks"  # Repeater
-  content_blocks.headline: "vertical_headline"
-  content_blocks.content: "content"
-  related_posts: "post"
+```html
+<!-- wp:acf/blog-hero {"name":"acf/blog-hero","data":{
+  "image":5502,
+  "_image":"field_6308b9807dfe5",
+  "mobile_image":5504,
+  "_mobile_image":"field_6308b98f7dfe6",
+  "post":["5499"],
+  "_post":"field_6322de3f6c2a7",
+  "date":"23-01-26",
+  "_date":"field_640664705a3fa",
+  "author":"DNM",
+  "_author":"field_63bef8f0114d2",
+  "category":["34","33"],
+  "_category":"field_64066558f20b2",
+  "custom_block_mobile_margin_top":"50",
+  "_custom_block_mobile_margin_top":"field_5ed62d8f1903b",
+  "custom_block_desktop_margin_top":"100",
+  "_custom_block_desktop_margin_top":"field_5ed62dc31903c",
+  ...
+},"mode":"edit"} /-->
 
-yoast_fields:
-  seo_title: "_yoast_wpseo_title"
-  meta_description: "_yoast_wpseo_metadesc"
-  focus_keyword: "_yoast_wpseo_focuskw"
+<!-- wp:acf/intro-text {"name":"acf/intro-text","data":{
+  "field_64b7efe0ba1c3":"Headline hier",
+  "field_62610ddb9a17b":"<p>Content hier...</p>",
+  "field_64b7f00fba1c4":"0",
+  ...
+},"align":"left","mode":"edit"} /-->
+
+<!-- wp:acf/recommended-content-module {"name":"acf/recommended-content-module","data":{
+  "headline":"Ähnliche Artikel",
+  "_headline":"field_62d93a6ce366b",
+  "recommended_posts":["5237","1651"],
+  "_recommended_posts":"field_62d93a7be366c",
+  ...
+},"mode":"edit"} /-->
 ```
 
 ---
@@ -1047,13 +1031,116 @@ yoast_fields:
 # 📝 Notizen für Agenten
 
 - Bei Unklarheiten: Frage den User
-- **WICHTIG:** Nach jedem abgeschlossenen Task: Status im YAML-Block von `pending` auf `done` ändern und in PROJEKTPLAN.md speichern
+- **WICHTIG:** Nach jedem abgeschlossenen Task: Status im YAML-Block von `pending` auf `done` ändern
 - Bei Blockern: Status auf `blocked` setzen und Grund notieren
 - Alle Komponenten müssen TypeScript-typisiert sein
 - Tailwind CSS für Styling verwenden
 - Keine externen UI-Libraries (außer den installierten)
+- **KRITISCH:** WordPress nutzt ACF Gutenberg Blocks, NICHT klassische ACF-Felder!
 - Immer die Änderungen mit `git status` und `git diff` prüfen bevor ein Commit erstellt wird
 
 ---
 
+# 🐛 Bekannte Issues
+
+## Issue #1: WordPress Content Format (✅ BEHOBEN)
+
+**Problem:** Posts wurden ohne ACF-Blocks erstellt, Bilder nicht hochgeladen.
+
+**Ursache:** `wordpress.ts` hat klassische ACF-Felder erwartet, aber WordPress nutzt Gutenberg ACF-Blocks.
+
+**Lösung:** `wordpress.ts` komplett neu geschrieben mit:
+
+- Gutenberg Block-Format Generator
+- Korrekten Field-IDs aus WordPress
+- Bild-Upload mit Metadaten
+
+**Status:** ✅ Behoben und getestet.
+
+---
+
+## Issue #2: Duplicate Drafts bei Update (✅ BEHOBEN)
+
+**Problem:** Jeder Publish-Vorgang erstellte einen neuen Draft in WordPress, statt den bestehenden zu aktualisieren.
+
+**Ursache:** Keine Tracking-Mechanismus für WordPress Post ID.
+
+**Lösung:**
+
+- `wpPostId` Field zum `BlogPost` Type hinzugefügt
+- `setWpPostId()` Action im Store
+- API Route prüft ob `wpPostId` existiert und ruft `updateDraft()` oder `createDraft()` auf
+
+**Status:** ✅ Behoben und getestet.
+
+---
+
+## Issue #3: File Upload Error nach Page Reload (✅ BEHOBEN)
+
+**Problem:** Nach einem Page-Reload (localStorage restore) schlugen Bild-Uploads fehl mit "Keine Daten bereitgestellt".
+
+**Ursache:**
+
+- File-Objekte können nicht in localStorage gespeichert werden
+- Nach Reload: `preview` URLs vorhanden, aber `file` = null
+- WordPress versuchte erneut hochzuladen mit null File-Objekten
+
+**Lösung:**
+
+- `wpMediaId` Field zu `ImageData` Type hinzugefügt
+- Custom Storage implementiert, das File-Objekte vor localStorage-Speicherung filtert
+- `uploadMediaWithMeta()` prüft ob `wpMediaId` existiert und überspringt Upload
+- `buildGutenbergContent()` verwendet vorhandene `wpMediaId` statt erneut hochzuladen
+- `setImageMediaId()` Action speichert Media IDs nach erfolgreichem Upload
+
+**Status:** ✅ Behoben und getestet.
+
+---
+
+## Issue #4: Tag Input - Komma nicht eingabefähig (✅ BEHOBEN)
+
+**Problem:** In MetaFields konnte man keine Kommas in das Tag-Input-Feld eingeben.
+
+**Ursache:** `onChange` Event hat sofort den String gesplittet, was Komma-Eingabe verhinderte.
+
+**Lösung:**
+
+- Local State für Tag Input hinzugefügt
+- `onBlur` statt `onChange` für Tag-Parsing
+- User kann jetzt frei tippen, Tags werden erst beim Verlassen des Feldes geparst
+
+**Status:** ✅ Behoben und getestet.
+
+---
+
+## Issue #5: localStorage JSON Parse Error (✅ BEHOBEN)
+
+**Problem:** Console-Fehler: "SyntaxError: '[object Object]' is not valid JSON" beim Speichern.
+
+**Ursache:** Custom Storage `setItem()` versuchte `JSON.parse()` auf einem Objekt, das Zustand bereits als Objekt übergab.
+
+**Lösung:** Parameter-Type von `value: string` auf `value: any` geändert und `JSON.parse()` entfernt.
+
+**Status:** ✅ Behoben und getestet.
+
+---
+
+## Issue #6: Images not uploaded on publish (? BEHOBEN)
+
+**Problem:** Bild-Uploads landeten nicht in WordPress.
+
+**Ursache:** Publish-Request sendete nur JSON, File-Objekte wurden nicht mitgesendet.
+
+**Loesung:**
+
+- Sofort-Upload beim Bild-Select ueber `/api/upload`
+- Upload inkl. Alt/Caption/Description
+- Meta-Updates per `/api/upload` wenn Felder geaendert werden
+
+**Status:** ? Behoben und getestet.
+
+---
+
 _Dieses Dokument wird von KI-Agenten gelesen und aktualisiert._
+
+_Version 1.1 - 2026-01-28_

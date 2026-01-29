@@ -83,6 +83,59 @@ const createEmptyPost = (): BlogPost => ({
   wpPostId: null,
 });
 
+// Custom storage that filters out File objects before saving to localStorage
+const customStorage = {
+  getItem: (name: string) => {
+    const str = localStorage.getItem(name);
+    return str ? JSON.parse(str) : null;
+  },
+  setItem: (name: string, value: any) => {
+    try {
+      // Helper to remove File objects recursively
+      const removeFiles = (obj: any): any => {
+        if (obj === null || obj === undefined) return obj;
+        if (typeof obj !== 'object') return obj;
+
+        if (Array.isArray(obj)) {
+          return obj.map(removeFiles);
+        }
+
+        const cleaned: any = {};
+        for (const key in obj) {
+          const val = obj[key];
+          // Skip File objects but keep wpMediaId and other properties
+          if (val instanceof File || (val && val.constructor && val.constructor.name === 'File')) {
+            cleaned[key] = null;
+          } else if (typeof val === 'object' && val !== null) {
+            cleaned[key] = removeFiles(val);
+          } else {
+            cleaned[key] = val;
+          }
+        }
+        return cleaned;
+      };
+
+      const cleaned = removeFiles(value);
+
+      // Debug: Check wpMediaIds
+      if (cleaned.state?.post) {
+        console.log('[Storage] Saving wpMediaIds:', {
+          headerImageDesktop: cleaned.state.post.headerImageDesktop?.wpMediaId,
+          headerImageMobile: cleaned.state.post.headerImageMobile?.wpMediaId,
+          featuredImage: cleaned.state.post.featuredImage?.wpMediaId,
+        });
+      }
+
+      localStorage.setItem(name, JSON.stringify(cleaned));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  },
+  removeItem: (name: string) => {
+    localStorage.removeItem(name);
+  },
+};
+
 export const useEditorStore = create<EditorStore>()(
   persist(
     (set, get) => ({
@@ -281,11 +334,12 @@ export const useEditorStore = create<EditorStore>()(
     }),
     {
       name: 'dnm-blog-editor-storage', // LocalStorage key
+      storage: customStorage as any,
       partialize: (state) => ({
         // Only persist the post data, not the UI states
         post: state.post,
         lastSaved: state.lastSaved,
-      }),
+      }) as any,
     }
   )
 );
