@@ -98,9 +98,9 @@ export default function RelatedPosts() {
           {relatedPosts.map((post) => (
             <div
               key={post.id}
-              className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded px-3 py-2"
+              className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded px-3 py-2"
             >
-              <span className="text-sm font-medium text-blue-900">
+              <span className="text-sm font-medium text-emerald-900">
                 {post.title}
               </span>
               <Button
@@ -109,7 +109,7 @@ export default function RelatedPosts() {
                 size="sm"
                 onClick={() => removePost(post.id)}
               >
-                <X className="h-4 w-4 text-blue-700" />
+                <X className="h-4 w-4 text-emerald-700" />
               </Button>
             </div>
           ))}

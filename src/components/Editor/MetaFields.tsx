@@ -125,7 +125,7 @@ export default function MetaFields() {
                   type="checkbox"
                   checked={meta.categories?.includes(category.name) || false}
                   onChange={() => handleCategoryToggle(category.name)}
-                  className="mr-2 h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
+                  className="mr-2 h-4 w-4 rounded border-neutral-300 text-emerald-600 focus:ring-emerald-500"
                 />
                 <span className="text-sm text-neutral-700">
                   {category.name}
@@ -160,7 +160,7 @@ export default function MetaFields() {
               {meta.tags.map((tag, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md bg-blue-100 text-blue-800"
+                  className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md bg-emerald-100 text-emerald-800"
                 >
                   {tag}
                 </span>

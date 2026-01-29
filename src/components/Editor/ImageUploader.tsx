@@ -165,7 +165,7 @@ export default function ImageUploader({
           onDragLeave={handleDragLeave}
           className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
             isDragging
-              ? 'border-blue-500 bg-blue-50'
+              ? 'border-emerald-500 bg-emerald-50'
               : 'border-neutral-300 hover:border-neutral-400'
           }`}
         >
@@ -175,7 +175,7 @@ export default function ImageUploader({
           </p>
           <p className="text-sm text-neutral-500">PNG, JPG, GIF bis 10MB</p>
           {isUploading && (
-            <p className="text-sm text-blue-600 mt-2">Upload l„uft...</p>
+            <p className="text-sm text-emerald-600 mt-2">Upload l„uft...</p>
           )}
           {uploadError && (
             <p className="text-sm text-red-600 mt-2">{uploadError}</p>
@@ -206,7 +206,7 @@ export default function ImageUploader({
             </Button>
           </div>
           {isUploading && (
-            <p className="text-sm text-blue-600">Upload l„uft...</p>
+            <p className="text-sm text-emerald-600">Upload l„uft...</p>
           )}
           {uploadError && (
             <p className="text-sm text-red-600">{uploadError}</p>

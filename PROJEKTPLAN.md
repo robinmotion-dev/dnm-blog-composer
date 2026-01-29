@@ -956,7 +956,7 @@ acceptance:
 
 ```yaml
 id: TASK-022
-status: pending
+status: done
 priority: medium
 phase: 5
 agent: any
@@ -978,9 +978,9 @@ Phase 1: Grundgerüst     [██████████] 4/4  tasks ✓
 Phase 2: Editor          [██████████] 7/7  tasks ✓
 Phase 3: SEO & Preview   [██████████] 6/6  tasks ✓
 Phase 4: WP Integration  [██████████] 4/4  tasks ✓
-Phase 5: Polish          [███████░░░] 3/4  tasks (TASK-022 pending)
+Phase 5: Polish          [██████████] 4/4  tasks ✓
 ─────────────────────────────────────────────
-Total:                   [█████████░] 24/25 tasks
+Total:                   [██████████] 25/25 tasks
 ```
 
 ---

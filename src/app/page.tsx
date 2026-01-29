@@ -19,6 +19,7 @@ import Button from '@/components/UI/Button';
 
 export default function Home() {
   const [showDraftNotice, setShowDraftNotice] = useState(false);
+  const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
 
   const headerImageDesktop = useEditorStore(
     (state) => state.post.headerImageDesktop
@@ -82,11 +83,13 @@ export default function Home() {
   };
 
   return (
-    <main className="h-dvh flex flex-col">
+    <main className="h-dvh flex flex-col bg-neutral-50">
       {/* Header */}
-      <header className="flex items-center justify-between border-b px-4 py-3">
+      <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-4 py-3">
         <div className="flex items-center gap-4">
-          <div className="font-semibold">DNM Blog Composer</div>
+          <div className="font-semibold text-neutral-900">
+            DNM Blog Composer
+          </div>
           {showDraftNotice && (
             <Button variant="ghost" size="sm" onClick={handleClearDraft}>
               Entwurf löschen
@@ -102,8 +105,40 @@ export default function Home() {
 
       {/* Content */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2">
+        {/* Mobile Tabs */}
+        <div className="lg:hidden col-span-full border-b border-neutral-200 bg-white px-4 py-2 sticky top-0 z-10">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('editor')}
+              className={`flex-1 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+                activeTab === 'editor'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-neutral-100 text-neutral-700'
+              }`}
+            >
+              Editor
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('preview')}
+              className={`flex-1 rounded-full px-3 py-2 text-sm font-medium transition-colors ${
+                activeTab === 'preview'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-neutral-100 text-neutral-700'
+              }`}
+            >
+              Vorschau
+            </button>
+          </div>
+        </div>
+
         {/* Editor */}
-        <section className="border-b lg:border-b-0 lg:border-r overflow-auto p-6">
+        <section
+          className={`border-b lg:border-b-0 lg:border-r border-neutral-200 overflow-auto p-5 md:p-6 lg:p-8 bg-white ${
+            activeTab === 'preview' ? 'hidden lg:block' : 'block'
+          }`}
+        >
           <TitleInput />
 
           <ImageUploader
@@ -136,7 +171,11 @@ export default function Home() {
         </section>
 
         {/* Preview */}
-        <section className="overflow-auto p-6 bg-neutral-50">
+        <section
+          className={`overflow-auto p-5 md:p-6 lg:p-8 bg-neutral-50 ${
+            activeTab === 'editor' ? 'hidden lg:block' : 'block'
+          }`}
+        >
           <BlogPreview />
         </section>
       </div>

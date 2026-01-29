@@ -87,7 +87,7 @@ export default function PublishButton() {
                 href={wpPost.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+                className="text-emerald-600 hover:text-emerald-800 underline flex items-center gap-1"
                 onClick={() => toast.dismiss(t.id)}
               >
                 Öffnen
@@ -143,7 +143,7 @@ export default function PublishButton() {
               href={lastPublishedLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-green-600 hover:text-green-800 underline flex items-center gap-1"
+              className="text-emerald-600 hover:text-emerald-800 underline flex items-center gap-1"
             >
               Im WordPress öffnen
               <ExternalLink className="h-3 w-3" />

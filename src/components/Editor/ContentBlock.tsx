@@ -65,8 +65,8 @@ export default function ContentBlock({
           ) : (
             <>
               {/* Image Block */}
-              <div className="bg-blue-50 border border-blue-200 rounded px-3 py-2 mb-2">
-                <span className="text-sm font-medium text-blue-800">
+              <div className="bg-emerald-50 border border-emerald-200 rounded px-3 py-2 mb-2">
+                <span className="text-sm font-medium text-emerald-800">
                   Bildblock
                 </span>
               </div>

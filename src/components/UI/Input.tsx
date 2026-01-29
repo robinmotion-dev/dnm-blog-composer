@@ -12,7 +12,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     const errorStyles = error
       ? 'border-red-500 focus:ring-red-500'
-      : 'border-neutral-300 focus:ring-blue-500 focus:border-blue-500';
+      : 'border-neutral-300 focus:ring-emerald-500 focus:border-emerald-500';
 
     const widthStyles = fullWidth ? 'w-full' : '';
 

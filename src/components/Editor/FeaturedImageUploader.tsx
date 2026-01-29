@@ -39,7 +39,7 @@ export default function FeaturedImageUploader() {
             type="checkbox"
             checked={useFeaturedImageFromHeader}
             onChange={(e) => setUseFeaturedImageFromHeader(e.target.checked)}
-            className="mr-2 h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
+            className="mr-2 h-4 w-4 rounded border-neutral-300 text-emerald-600 focus:ring-emerald-500"
           />
           <span className="text-sm text-neutral-700">
             Header-Bild (Desktop) als Teaserbild verwenden
@@ -50,8 +50,8 @@ export default function FeaturedImageUploader() {
       {useFeaturedImageFromHeader ? (
         <div className="space-y-3">
           {/* Info Box */}
-          <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
-            <p className="text-sm text-blue-800">
+          <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3">
+            <p className="text-sm text-emerald-800">
               <strong>Info:</strong> Das Desktop Header-Bild wird automatisch
               als Teaserbild verwendet. Es wird von links und rechts gleichmäßig
               auf ein Quadrat gecroppt.
@@ -69,9 +69,9 @@ export default function FeaturedImageUploader() {
                   className="w-full h-auto"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-1/2 h-full border-2 border-dashed border-blue-500 bg-blue-500 bg-opacity-10">
+                  <div className="w-1/2 h-full border-2 border-dashed border-emerald-500 bg-emerald-500 bg-opacity-10">
                     <div className="flex items-center justify-center h-full">
-                      <span className="text-blue-700 font-semibold bg-white bg-opacity-90 px-3 py-1 rounded">
+                      <span className="text-emerald-700 font-semibold bg-white bg-opacity-90 px-3 py-1 rounded">
                         Crop-Bereich (Quadrat)
                       </span>
                     </div>

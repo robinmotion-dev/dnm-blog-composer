@@ -59,7 +59,7 @@ export default function BlogPreview() {
 
         {/* Excerpt */}
         {post.excerpt && (
-          <div className="text-lg text-neutral-700 mb-8 italic border-l-4 border-blue-500 pl-4">
+          <div className="text-lg text-neutral-700 mb-8 italic border-l-4 border-emerald-500 pl-4">
             {post.excerpt}
           </div>
         )}
@@ -137,7 +137,7 @@ export default function BlogPreview() {
                 <li key={relatedPost.id}>
                   <a
                     href="#"
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
+                    className="text-emerald-600 hover:text-emerald-800 hover:underline"
                   >
                     {relatedPost.title}
                   </a>
