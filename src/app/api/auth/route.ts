@@ -4,6 +4,7 @@ const ALLOWED_USERS: Record<string, string> = {
   'ap@dnm.berlin': 'Alexandra Pille',
   'aw@dnm.berlin': 'Andrea Wichmann',
   'rk@dnm.berlin': 'Robin Kornemann',
+  'office@dnm.berlin': 'DNM Office',
 };
 
 async function createToken(email: string, secret: string): Promise<string> {
