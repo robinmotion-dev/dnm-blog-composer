@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useEditorStore } from '@/stores/editor-store';
 import { setupAutosave, hasDraft, getLastSavedDate } from '@/lib/storage';
@@ -20,6 +21,12 @@ import Button from '@/components/UI/Button';
 export default function Home() {
   const [showDraftNotice, setShowDraftNotice] = useState(false);
   const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await fetch('/api/auth', { method: 'DELETE' });
+    router.push('/login');
+  };
 
   const headerImageDesktop = useEditorStore(
     (state) => state.post.headerImageDesktop
@@ -97,9 +104,14 @@ export default function Home() {
           )}
         </div>
 
-        <div className="text-sm text-neutral-500">
-          Autosave: {formatLastSaved()}
-          {isDirty && ' (nicht gespeichert)'}
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-neutral-500">
+            Autosave: {formatLastSaved()}
+            {isDirty && ' (nicht gespeichert)'}
+          </div>
+          <Button variant="ghost" size="sm" onClick={handleLogout}>
+            Abmelden
+          </Button>
         </div>
       </header>
 
