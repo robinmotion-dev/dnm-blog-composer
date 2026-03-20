@@ -981,6 +981,9 @@ acceptance:
 - Login-UI verbessert: Checkbox "Passwort anzeigen" auf `src/app/login/page.tsx` ergänzt.
 - Localhost-Test vorbereitet: Dependencies installiert und Dev-Server mit Host-Flag gestartet (`npm run dev -- --hostname 127.0.0.1 --port 3000`).
 - Hinweis aus Laufzeit geprüft: Watcher meldet `EMFILE` (zu viele offene Dateien), App ist dennoch auf `http://127.0.0.1:3000` erreichbar.
+- Login-Flow auf Vercel stabilisiert: globales Passwort serverseitig auf `DNM-PW-BlogComposer` fixiert; `AUTH_SECRET` bleibt Pflicht.
+- Debug-Analyse Header/Hero in WP-Preview gestartet: Runtime-Logs im Publish-Flow ergänzt (`/api/publish`, `src/lib/wordpress.ts`).
+- Befund dokumentiert: Bei Post `5549` ist `acf/blog-hero` vorhanden und Bild-IDs sind gesetzt, aber `post`/`field_6322de3f6c2a7` aktuell leer; weitere Verifikation läuft.
 
 ---
 

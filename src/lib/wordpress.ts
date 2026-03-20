@@ -413,8 +413,13 @@ function buildBlogHeroBlock(
   date: string,
   author: string,
   categoryIds: number[],
-  relatedPostIds: number[]
+  heroPostId: number | null
 ): string {
+  const heroPostRefs = heroPostId ? [String(heroPostId)] : [];
+  console.log('[wordpress] buildBlogHeroBlock refs', { heroPostId, heroPostRefs });
+  // #region agent log
+  fetch('http://127.0.0.1:7625/ingest/bc1ee6ac-1b9c-41ca-a38b-f4a0c8308643',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4e7e9a'},body:JSON.stringify({sessionId:'4e7e9a',runId:'hero-debug-1',hypothesisId:'H1',location:'src/lib/wordpress.ts:buildBlogHeroBlock',message:'Building hero block refs',data:{heroPostId,heroPostRefsLength:heroPostRefs.length,hasImage:Boolean(imageId),hasMobileImage:Boolean(mobileImageId),categoryCount:categoryIds.length},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   const data: Record<string, unknown> = {
     image: imageId || '',
     [`_image`]: FIELD_IDS.blogHero.image,
@@ -422,9 +427,9 @@ function buildBlogHeroBlock(
     mobile_image: mobileImageId || '',
     [`_mobile_image`]: FIELD_IDS.blogHero.mobileImage,
     [FIELD_IDS.blogHero.mobileImage]: mobileImageId || '',
-    post: relatedPostIds.map(String),
+    post: heroPostRefs,
     [`_post`]: FIELD_IDS.blogHero.post,
-    [FIELD_IDS.blogHero.post]: relatedPostIds.map(String),
+    [FIELD_IDS.blogHero.post]: heroPostRefs,
     date: date,
     [`_date`]: FIELD_IDS.blogHero.date,
     [FIELD_IDS.blogHero.date]: date,
@@ -458,6 +463,37 @@ function buildBlogHeroBlock(
   };
 
   return `<!-- wp:acf/blog-hero {"name":"acf/blog-hero","data":${JSON.stringify(data)},"mode":"edit"} /-->`;
+}
+
+/**
+ * Inject the current WordPress post ID into the hero block's "post" reference.
+ * Needed for newly created drafts where the post ID exists only after creation.
+ */
+function injectHeroPostReference(content: string, postId: number): string {
+  const heroBlockRegex = /<!-- wp:acf\/blog-hero (\{[\s\S]*?\}) \/-->/;
+
+  return content.replace(heroBlockRegex, (fullMatch, jsonPart: string) => {
+    try {
+      const parsed = JSON.parse(jsonPart) as { data?: Record<string, unknown> };
+      if (!parsed.data) return fullMatch;
+
+      const refs = [String(postId)];
+      parsed.data.post = refs;
+      parsed.data._post = FIELD_IDS.blogHero.post;
+      parsed.data[FIELD_IDS.blogHero.post] = refs;
+      console.log('[wordpress] injectHeroPostReference success', { postId, refs });
+      // #region agent log
+      fetch('http://127.0.0.1:7625/ingest/bc1ee6ac-1b9c-41ca-a38b-f4a0c8308643',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4e7e9a'},body:JSON.stringify({sessionId:'4e7e9a',runId:'hero-debug-1',hypothesisId:'H2',location:'src/lib/wordpress.ts:injectHeroPostReference',message:'Injected hero post reference',data:{postId,refsLength:refs.length,hasHeroBlock:true},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+
+      return `<!-- wp:acf/blog-hero ${JSON.stringify(parsed)} /-->`;
+    } catch {
+      // #region agent log
+      fetch('http://127.0.0.1:7625/ingest/bc1ee6ac-1b9c-41ca-a38b-f4a0c8308643',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4e7e9a'},body:JSON.stringify({sessionId:'4e7e9a',runId:'hero-debug-1',hypothesisId:'H2',location:'src/lib/wordpress.ts:injectHeroPostReference',message:'Failed to parse hero block JSON',data:{postId},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      return fullMatch;
+    }
+  });
 }
 
 /**
@@ -561,7 +597,10 @@ function buildRecommendedContentBlock(
 /**
  * Build the complete Gutenberg block content from BlogPost
  */
-async function buildGutenbergContent(post: BlogPost): Promise<{
+async function buildGutenbergContent(
+  post: BlogPost,
+  heroPostId: number | null = null
+): Promise<{
   content: string;
   headerImageId: number | null;
   mobileImageId: number | null;
@@ -595,6 +634,9 @@ async function buildGutenbergContent(post: BlogPost): Promise<{
       mobileImageId = await uploadMediaWithMeta(post.headerImageMobile);
     }
   }
+  // #region agent log
+  fetch('http://127.0.0.1:7625/ingest/bc1ee6ac-1b9c-41ca-a38b-f4a0c8308643',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4e7e9a'},body:JSON.stringify({sessionId:'4e7e9a',runId:'hero-debug-1',hypothesisId:'H3',location:'src/lib/wordpress.ts:buildGutenbergContent',message:'Resolved hero/featured media ids',data:{heroPostId,headerImageId,mobileImageId,featuredImageId,blockCount:post.blocks.length},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
 
   // Featured image (use dedicated or header image)
   const postWithFeatured = post as BlogPost & {
@@ -624,7 +666,7 @@ async function buildGutenbergContent(post: BlogPost): Promise<{
     post.meta.date || '',
     post.meta.author || 'DNM',
     categoryIds,
-    post.relatedPosts?.map(p => p.id) || []
+    heroPostId
   );
   blocks.push(blogHeroBlock);
 
@@ -871,6 +913,37 @@ export async function createDraft(post: BlogPost): Promise<{
         'Content-Type': 'application/json',
       },
     });
+    console.log('[wordpress] createDraft created post', { postId: response.data?.id ?? null });
+    // #region agent log
+    fetch('http://127.0.0.1:7625/ingest/bc1ee6ac-1b9c-41ca-a38b-f4a0c8308643',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4e7e9a'},body:JSON.stringify({sessionId:'4e7e9a',runId:'hero-debug-1',hypothesisId:'H1',location:'src/lib/wordpress.ts:createDraft',message:'Created draft on WordPress',data:{createdPostId:response.data?.id ?? null,hasContent:Boolean(content)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+
+    // New drafts don't know their post ID at content build time.
+    // Patch hero block after creation so headline/image logic can resolve correctly in theme preview.
+    if (response.data?.id) {
+      const contentWithHeroRef = injectHeroPostReference(content, response.data.id);
+      if (contentWithHeroRef !== content) {
+        console.log('[wordpress] createDraft patching hero reference', { postId: response.data.id });
+        await axios.put(
+          `${WP_REST_URL}/posts/${response.data.id}`,
+          { content: embedStateInContent(post, contentWithHeroRef) },
+          {
+            headers: {
+              ...getAuthHeader(),
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        // #region agent log
+        fetch('http://127.0.0.1:7625/ingest/bc1ee6ac-1b9c-41ca-a38b-f4a0c8308643',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4e7e9a'},body:JSON.stringify({sessionId:'4e7e9a',runId:'hero-debug-1',hypothesisId:'H4',location:'src/lib/wordpress.ts:createDraft',message:'Patched draft content with hero post reference',data:{postId:response.data.id,contentChanged:true},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+      } else {
+        console.log('[wordpress] createDraft hero patch skipped (content unchanged)', { postId: response.data.id });
+        // #region agent log
+        fetch('http://127.0.0.1:7625/ingest/bc1ee6ac-1b9c-41ca-a38b-f4a0c8308643',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4e7e9a'},body:JSON.stringify({sessionId:'4e7e9a',runId:'hero-debug-1',hypothesisId:'H2',location:'src/lib/wordpress.ts:createDraft',message:'Hero reference patch skipped because content unchanged',data:{postId:response.data.id},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+      }
+    }
 
     return {
       post: response.data,
@@ -898,7 +971,11 @@ export async function updateDraft(postId: number, post: BlogPost): Promise<{
 }> {
   try {
     // 1. Build Gutenberg content (includes image uploads)
-    const { content, headerImageId, mobileImageId, featuredImageId } = await buildGutenbergContent(post);
+    const { content, headerImageId, mobileImageId, featuredImageId } = await buildGutenbergContent(post, postId);
+    console.log('[wordpress] updateDraft building content', { postId, headerImageId, mobileImageId, featuredImageId });
+    // #region agent log
+    fetch('http://127.0.0.1:7625/ingest/bc1ee6ac-1b9c-41ca-a38b-f4a0c8308643',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4e7e9a'},body:JSON.stringify({sessionId:'4e7e9a',runId:'hero-debug-1',hypothesisId:'H5',location:'src/lib/wordpress.ts:updateDraft',message:'Updating draft with explicit hero post id',data:{postId,hasContent:Boolean(content),headerImageId,mobileImageId},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
 
     // 2. Get category and tag IDs
     const categoryIds = await getCategoryIds(post.meta.categories);
