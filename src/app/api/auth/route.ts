@@ -28,7 +28,7 @@ async function createToken(email: string, secret: string): Promise<string> {
 export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
 
-  const authPassword = process.env.AUTH_PASSWORD ?? 'DNM-PW-BlogComposer';
+  const authPassword = 'DNM-PW-BlogComposer';
   const authSecret = process.env.AUTH_SECRET;
 
   if (!authSecret) {
