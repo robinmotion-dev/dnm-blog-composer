@@ -17,10 +17,12 @@ import SEOIndicator from '@/components/SEO/SEOIndicator';
 import PublishButton from '@/components/Editor/PublishButton';
 import BlogPreview from '@/components/Preview/BlogPreview';
 import Button from '@/components/UI/Button';
+import LoadDraftModal from '@/components/Editor/LoadDraftModal';
 
 export default function Home() {
   const [showDraftNotice, setShowDraftNotice] = useState(false);
   const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
+  const [showLoadDraftModal, setShowLoadDraftModal] = useState(false);
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -97,6 +99,9 @@ export default function Home() {
           <div className="font-semibold text-neutral-900">
             DNM Blog Composer
           </div>
+          <Button variant="secondary" size="sm" onClick={() => setShowLoadDraftModal(true)}>
+            Entwurf laden
+          </Button>
           {showDraftNotice && (
             <Button variant="ghost" size="sm" onClick={handleClearDraft}>
               Entwurf löschen
@@ -191,6 +196,10 @@ export default function Home() {
           <BlogPreview />
         </section>
       </div>
+
+      {showLoadDraftModal && (
+        <LoadDraftModal onClose={() => setShowLoadDraftModal(false)} />
+      )}
     </main>
   );
 }

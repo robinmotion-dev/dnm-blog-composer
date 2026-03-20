@@ -28,6 +28,7 @@ interface EditorStore {
   setRelatedPosts: (posts: RelatedPost[]) => void;
   setWpPostId: (id: number) => void;
   setImageMediaId: (imageType: 'headerImageDesktop' | 'headerImageMobile' | 'featuredImage', mediaId: number) => void;
+  loadPost: (post: BlogPost) => void;
   resetPost: () => void;
   loadFromStorage: () => void;
   setIsSaving: (isSaving: boolean) => void;
@@ -279,6 +280,15 @@ export const useEditorStore = create<EditorStore>()(
             },
           },
         })),
+
+      loadPost: (post: BlogPost) =>
+        set({
+          post,
+          isDirty: false,
+          lastSaved: null,
+          isSaving: false,
+          isPublishing: false,
+        }),
 
       resetPost: () =>
         set({

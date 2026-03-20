@@ -681,6 +681,142 @@ async function buildGutenbergContent(post: BlogPost): Promise<{
 }
 
 // =============================================================================
+// DRAFT STATE HELPERS
+// =============================================================================
+
+/**
+ * Summary of a WordPress draft post
+ */
+export interface WPDraftSummary {
+  id: number;
+  title: string;
+  modified: string;
+  hasComposerState: boolean;
+}
+
+/**
+ * Serialize post state for embedding (strips non-serializable File objects)
+ */
+function serializePostState(post: BlogPost): BlogPost {
+  const stripFile = (img: ImageData): ImageData => ({ ...img, file: null });
+  return {
+    ...post,
+    headerImageDesktop: stripFile(post.headerImageDesktop),
+    headerImageMobile: stripFile(post.headerImageMobile),
+    featuredImage: stripFile(post.featuredImage),
+    blocks: post.blocks.map((block) => ({
+      ...block,
+      image: block.image ? stripFile(block.image) : undefined,
+    })),
+  };
+}
+
+/**
+ * Embed the full composer state as a hidden HTML comment in the post content
+ */
+function embedStateInContent(post: BlogPost, content: string): string {
+  const serialized = serializePostState(post);
+  const encoded = Buffer.from(JSON.stringify(serialized)).toString('base64');
+  return `<!-- dnm_composer_state: ${encoded} -->\n\n${content}`;
+}
+
+/**
+ * Extract composer state from WP post content (raw)
+ */
+function extractStateFromContent(rawContent: string): BlogPost | null {
+  const match = rawContent.match(/<!-- dnm_composer_state: ([A-Za-z0-9+/=\n]+) -->/);
+  if (!match) return null;
+  try {
+    const decoded = Buffer.from(match[1].replace(/\n/g, ''), 'base64').toString('utf-8');
+    return JSON.parse(decoded) as BlogPost;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Restore image preview URLs from WordPress media (for cross-device loading)
+ */
+async function restoreImageUrl(img: ImageData): Promise<ImageData> {
+  if (img.wpMediaId && (!img.preview || img.preview.startsWith('blob:'))) {
+    try {
+      const response = await axios.get(`${WP_REST_URL}/media/${img.wpMediaId}`, {
+        headers: getAuthHeader(),
+      });
+      return { ...img, preview: response.data.source_url || '' };
+    } catch (error) {
+      console.error(`[restoreImageUrl] Failed to restore preview for media ${img.wpMediaId}:`, error);
+      return img;
+    }
+  }
+  return img;
+}
+
+/**
+ * Fetch list of draft posts from WordPress
+ */
+export async function getDrafts(): Promise<WPDraftSummary[]> {
+  try {
+    const response = await axios.get(`${WP_REST_URL}/posts`, {
+      headers: getAuthHeader(),
+      params: {
+        status: 'draft',
+        context: 'edit',
+        per_page: 50,
+        orderby: 'modified',
+        order: 'desc',
+        _fields: 'id,title,modified,content',
+      },
+    });
+
+    return response.data.map((p: { id: number; title: { rendered: string; raw: string }; modified: string; content: { raw: string } }) => ({
+      id: p.id,
+      title: p.title.rendered || p.title.raw || 'Kein Titel',
+      modified: p.modified,
+      hasComposerState: (p.content?.raw || '').includes('dnm_composer_state'),
+    }));
+  } catch (error) {
+    throw handleWPError(error, 'Failed to fetch drafts');
+  }
+}
+
+/**
+ * Fetch a single draft with its full composer state restored
+ */
+export async function getDraftWithState(postId: number): Promise<BlogPost | null> {
+  try {
+    const response = await axios.get(`${WP_REST_URL}/posts/${postId}`, {
+      headers: getAuthHeader(),
+      params: { context: 'edit' },
+    });
+
+    const rawContent: string = response.data.content?.raw || '';
+    const post = extractStateFromContent(rawContent);
+    if (!post) return null;
+
+    // Restore image preview URLs for cross-device compatibility
+    const [headerImageDesktop, headerImageMobile, featuredImage] = await Promise.all([
+      restoreImageUrl(post.headerImageDesktop),
+      restoreImageUrl(post.headerImageMobile),
+      restoreImageUrl(post.featuredImage),
+    ]);
+
+    const blocks = await Promise.all(
+      post.blocks.map(async (block) => {
+        if (block.image) {
+          return { ...block, image: await restoreImageUrl(block.image) };
+        }
+        return block;
+      })
+    );
+
+    return { ...post, headerImageDesktop, headerImageMobile, featuredImage, blocks };
+  } catch (error) {
+    throw handleWPError(error, 'Failed to fetch draft');
+  }
+}
+
+// =============================================================================
 // CREATE / UPDATE POSTS
 // =============================================================================
 
@@ -706,7 +842,7 @@ export async function createDraft(post: BlogPost): Promise<{
     // 3. Prepare post data
     const postData: Record<string, unknown> = {
       title: post.title,
-      content: content,
+      content: embedStateInContent(post, content),
       excerpt: post.excerpt || '',
       status: 'draft',
       slug: post.seo.slug || undefined,
@@ -771,7 +907,7 @@ export async function updateDraft(postId: number, post: BlogPost): Promise<{
     // 3. Prepare post data
     const postData: Record<string, unknown> = {
       title: post.title,
-      content: content,
+      content: embedStateInContent(post, content),
       excerpt: post.excerpt || '',
       slug: post.seo.slug || undefined,
       categories: categoryIds,
