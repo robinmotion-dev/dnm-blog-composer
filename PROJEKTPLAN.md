@@ -26,7 +26,7 @@ project:
     api: Next.js API Routes
     target: WordPress REST API + ACF Gutenberg Blocks
   hosting: DNM Server (Self-hosted)
-  auth: None (internal use only)
+  auth: Login mit allowlist + globalem Passwort
   users: 2-3 internal team members
 ```
 
@@ -968,6 +968,19 @@ acceptance:
   - DNM-Farben (falls vorhanden)
   - Mobile: Tabs statt Split-View
 ```
+
+---
+
+## 📘 Laufendes Arbeitslog
+
+### 2026-03-20
+
+- Auth-Status geprüft: Login-Flow aktiv mit E-Mail-Allowlist (`ap`, `aw`, `rk`, `office`).
+- Globales Login-Passwort festgelegt: `DNM-PW-BlogComposer`.
+- Auth-Env-Doku ergänzt: `AUTH_PASSWORD` und `AUTH_SECRET` in `.env.example`.
+- Login-UI verbessert: Checkbox "Passwort anzeigen" auf `src/app/login/page.tsx` ergänzt.
+- Localhost-Test vorbereitet: Dependencies installiert und Dev-Server mit Host-Flag gestartet (`npm run dev -- --hostname 127.0.0.1 --port 3000`).
+- Hinweis aus Laufzeit geprüft: Watcher meldet `EMFILE` (zu viele offene Dateien), App ist dennoch auf `http://127.0.0.1:3000` erreichbar.
 
 ---
 
