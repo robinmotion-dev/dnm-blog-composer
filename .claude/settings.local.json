@@ -10,7 +10,18 @@
       "Bash(git push origin main)",
       "Bash(cd /Volumes/SSD_Hub/My\\\\ GitHub\\\\ Stuff/dnm-blog-composer && ls:*)",
       "Bash(npm install:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: complete Tasks 17-18 - RelatedPosts & Publish Flow\n\n- TASK-017: RelatedPosts component with WP API integration, search & multi-select \\(max 3\\)\n- TASK-018: PublishButton with toast notifications, loading states, and error handling\n- Added react-hot-toast for notification system\n- Created ToastProvider and integrated into layout\n- Extended RelatedPost type with slug property\n- Updated PROJEKTPLAN.md status to done\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: complete Tasks 17-18 - RelatedPosts & Publish Flow\n\n- TASK-017: RelatedPosts component with WP API integration, search & multi-select \\(max 3\\)\n- TASK-018: PublishButton with toast notifications, loading states, and error handling\n- Added react-hot-toast for notification system\n- Created ToastProvider and integrated into layout\n- Extended RelatedPost type with slug property\n- Updated PROJEKTPLAN.md status to done\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(cd \"D:\\\\GitHub_DNM\\\\dnm-blog-composer\" && npx vercel whoami 2>&1)",
+      "Bash(npx vercel:*)",
+      "Bash(echo \"https://dnm.berlin\" | npx vercel env add WP_URL production --yes 2>&1\necho \"https://dnm.berlin/wp-json/wp/v2\" | npx vercel env add WP_REST_URL production --yes 2>&1\necho \"DNM-RK\" | npx vercel env add WP_USER production --yes 2>&1)",
+      "Bash(npm run:*)",
+      "Bash(openssl rand:*)",
+      "Bash(git -C /d/GitHub_DNM/dnm-blog-composer add src/proxy.ts src/app/api/auth/route.ts src/app/login/page.tsx src/app/page.tsx && git -C /d/GitHub_DNM/dnm-blog-composer commit -m \"$\\(cat <<'EOF'\nAdd auth: Login-Seite, Proxy-Middleware und Logout für 3 Nutzer\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && npx vercel --prod --yes 2>&1 | tail -8)",
+      "Bash(git -C /d/GitHub_DNM/dnm-blog-composer add src/middleware.ts src/app/api/auth/route.ts && git -C /d/GitHub_DNM/dnm-blog-composer commit -m \"$\\(cat <<'EOF'\nAdd office@dnm.berlin as allowed user\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && npx vercel --prod --yes 2>&1 | tail -6)",
+      "Bash(git -C /d/GitHub_DNM/dnm-blog-composer remote -v)",
+      "Bash(git -C /d/GitHub_DNM/dnm-blog-composer remote set-url origin https://github.com/robinmotion-dev/dnm-blog-composer.git && git -C /d/GitHub_DNM/dnm-blog-composer remote -v)",
+      "Bash(git -C /d/GitHub_DNM/dnm-blog-composer add .github/workflows/deploy.yml && git -C /d/GitHub_DNM/dnm-blog-composer commit -m \"$\\(cat <<'EOF'\nAdd GitHub Actions deploy workflow for Vercel\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\" && git -C /d/GitHub_DNM/dnm-blog-composer push origin main 2>&1)",
+      "Bash(git -C /d/GitHub_DNM/dnm-blog-composer add .github/workflows/deploy.yml && git -C /d/GitHub_DNM/dnm-blog-composer commit -m \"$\\(cat <<'EOF'\nFix: GitHub Action auf Vercel_link Secret und hardcoded IDs\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   }
 }
