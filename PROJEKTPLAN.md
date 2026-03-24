@@ -985,6 +985,10 @@ acceptance:
 - Debug-Analyse Header/Hero in WP-Preview gestartet: Runtime-Logs im Publish-Flow ergänzt (`/api/publish`, `src/lib/wordpress.ts`).
 - Befund dokumentiert: Bei Post `5549` ist `acf/blog-hero` vorhanden und Bild-IDs sind gesetzt, aber `post`/`field_6322de3f6c2a7` aktuell leer; weitere Verifikation läuft.
 
+### 2026-03-24
+
+- Multi-Device: Checkliste und Skript für abgleichbare Dev-Tools (Mac/PC): `docs/DEV_TOOLS_SYNC.md`, `npm run check:env`, Mindestversionen in `scripts/dev-env-expected.json`, `engines.node` in `package.json`.
+
 ---
 
 # 📊 Progress Tracking
